@@ -1,4 +1,6 @@
 import csv
+import json
+import logging
 import os
 import datetime
 
@@ -17,6 +19,8 @@ class componentLogger:
                        'details',
                        'muf']
 
+        logging.info("Status file saved to %s." % self.output_path)
+
         with open(self.output_path, 'w') as log_file:
 
             writer = csv.DictWriter(log_file,
@@ -27,6 +31,8 @@ class componentLogger:
                                     quoting=csv.QUOTE_ALL)
 
             writer.writeheader()
+
+        self.create_manifest()
 
     def make_log(self, user, action, success, role, details, muf):
 
@@ -54,3 +60,16 @@ class componentLogger:
                                     quoting=csv.QUOTE_ALL)
 
             writer.writerow(_to_write)
+
+    def create_manifest(self):
+
+        _out_path = self.output_path
+        _manifest_path = _out_path + '.manifest'
+
+        _man = {"destination": "out.c-GDUserManagement.status",
+                "incremental": False,
+                "delimiter": ","}
+
+        with open(_manifest_path, 'w') as f:
+
+            json.dump(_man, f)

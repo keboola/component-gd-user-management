@@ -51,7 +51,7 @@
 		"domain_custom": {
 			"type": "string",
 			"title": "GD custom domain",
-			"description": "If your GD project is whitelabeled, provide the domain. Format: https://domain.com",
+			"description": "If your GD project is whitelabeled, provide the domain. Format: https://subdomain.domain.com",
 			"default": "",
 			"propertyOrder": 600
 		}
