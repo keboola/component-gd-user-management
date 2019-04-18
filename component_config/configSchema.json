@@ -14,24 +14,28 @@
 			"type": "string",
 			"title": "GD Login",
 			"default": "",
-			"description": "Admin login to GoodData portal."
+			"description": "Admin login to GoodData portal.",
+			"propertyOrder": 100
 		},
 		"#password": {
 			"type": "string",
 			"format": "password",
 			"title": "GD Password",
-			"description": "Password to admin login to GD portal."
+			"description": "Password to admin login to GD portal.",
+			"propertyOrder": 200
 		},
 		"pid": {
 			"type": "string",
 			"title": "GoodData Project ID",
-			"description": "GD Project ID"
+			"description": "GD Project ID",
+			"propertyOrder": 300
 		},
 		"#sapi_token": {
 			"type": "string",
 			"format": "password",
 			"title": "Keboola Storage API Token",
-			"description": "SAPI Token"
+			"description": "SAPI Token",
+			"propertyOrder": 400
 		},
 		"domain_region": {
 			"type": "string",
@@ -41,13 +45,15 @@
 				"US",
 				"EU"
 			],
-			"default": "US"
+			"default": "US",
+			"propertyOrder": 500
 		},
 		"domain_custom": {
 			"type": "string",
 			"title": "GD custom domain",
 			"description": "If your GD project is whitelabeled, provide the domain. Format: https://domain.com",
-			"default": ""
+			"default": "",
+			"propertyOrder": 600
 		}
 	}
 }

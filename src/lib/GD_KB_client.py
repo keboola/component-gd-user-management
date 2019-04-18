@@ -36,6 +36,9 @@ class clientGoodDataKeboola:
                 "Provided regions does not match one of EU/US options.")
             sys.exit(1)
 
+        logging.info("GD domain set to %s." % self.gd_url)
+        logging.info("KBC domain set to %s." % self.kbc_url)
+
         self._GD_get_SST_token()
 
     def _GD_get_SST_token(self):
