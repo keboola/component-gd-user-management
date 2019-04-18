@@ -58,4 +58,4 @@ pipelines:
             # - docker run --rm -e KBC_STORAGE_TOKEN quay.io/keboola/syrup-cli:latest run-job $KBC_DEVELOPERPORTAL_APP $BASE_KBC_CONFIG test
             # - docker run --rm -e KBC_STORAGE_TOKEN quay.io/keboola/syrup-cli:latest run-job $KBC_DEVELOPERPORTAL_APP $KBC_CONFIG_1 test
             - ./scripts/update_dev_portal_properties.sh
-            - ./deploy.sh
+            - ./scripts/deploy.sh

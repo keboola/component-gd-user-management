@@ -5,7 +5,7 @@ COPY . /code/
 RUN pip install --ignore-installed -r /code/requirements.txt
 
 # DATA AND CODE FOLDERS
-COPY /data/ /data/
+# COPY /data/ /data/
 WORKDIR /code/
 
 # RUN THE MAIN PYTHON SCRIPT
