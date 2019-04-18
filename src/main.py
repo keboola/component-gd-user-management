@@ -10,7 +10,7 @@ from lib.component import componentRunner
 abspath = os.path.abspath(__file__)
 script_path = os.path.dirname(abspath)
 os.chdir(script_path)
-sys.tracebacklimit = 3
+sys.tracebacklimit = 0
 
 # Logging
 
