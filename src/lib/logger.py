@@ -67,7 +67,7 @@ class componentLogger:
         _manifest_path = _out_path + '.manifest'
 
         _man = {"destination": "out.c-GDUserManagement.status",
-                "incremental": False,
+                "incremental": True,
                 "delimiter": ","}
 
         with open(_manifest_path, 'w') as f:
