@@ -1,103 +1,53 @@
 {
-  "type": "object",
-  "title": "extractor configuration",
-  "required": [
-    "project_id",
-    "#api_token",
-    "period_from",
-    "period_to",
-    "relative_period",
-    "metrics",
-    "backfill_mode"
-  ],
-  "properties": {
-    "project_id": {
-      "type": "string",
-      "title": "Project ID",
-      "propertyOrder": 100
-    },
-    "#api_token": {
-      "type": "string",
-      "title": "API token",
-      "format": "password",
-      "propertyOrder": 200
-    },
-    "period_from": {
-      "type": "string",
-      "format": "date",
-      "title": "Period from date [including]",
-      "propertyOrder": 300
-    },
-    "period_to": {
-      "type": "string",
-      "format": "date",
-      "title": "Period to date [excluding]",
-      "propertyOrder": 400
-    },
-    "relative_period": {
-      "type": "string",
-      "title": "Relative period from now (utc)",
-      "description": "Relative period in format: '5 hours ago', 'yesterday','3 days ago', '4 months ago', '2 years ago', 'today'. Overrides `from` and `to` parameters.",
-      "propertyOrder": 450
-    },
-    "backfill_mode": {
-      "type": "number",
-      "title": "Backfill mode",
-      "description": "If backfill mode is enabled, each consecutive run of the component will continue from the end of the last run period, until current date is reached. The From and To date parameters are used to define Start date of the back-fill and also relative window of each run.",
-      "propertyOrder": 455,
-      "enum": [
-        0,
-        1
-      ],
-      "default": 0,
-      "options": {
-        "enum_titles": [
-          "No",
-          "Yes"
-        ]
-      }
-    },
-    "metrics": {
-      "type": "array",
-      "title": "Example array of group of string objects",
-      "description": "Group of string objects alligned in grid",
-      "items": {
-        "format": "grid",
-        "type": "object",
-        "title": "Items of array, multiple objects",
-        "required": [
-          "metric",
-          "modificator"
-        ],
-        "properties": {
-          "metric": {
-            "enum": [
-              "NoVt",
-              "TotTm",
-              "NoPV"
-            ],
-            "type": "string",
-            "default": "NoPV",
-            "title": "Metric",
-            "description": "First object, enum of strings",
-            "propertyOrder": 1000
-          },
-          "modificator": {
-            "enum": [
-              "none",
-              "change",
-              "share",
-              "share_in_total",
-              "change_in_percentage"
-            ],
-            "type": "string",
-            "title": "Mdificator",
-            "description": "Second object",
-            "default": "daily",
-            "propertyOrder": 2000
-          }
-        }
-      }
-    }
-  }
+	"title": "Parameters",
+	"type": "object",
+	"required": [
+		"username",
+		"#password",
+		"pid",
+		"#sapi_token",
+		"domain_region",
+		"domain_custom"
+	],
+	"properties": {
+		"username": {
+			"type": "string",
+			"title": "GD Login",
+			"default": "",
+			"description": "Admin login to GoodData portal."
+		},
+		"#password": {
+			"type": "string",
+			"format": "password",
+			"title": "GD Password",
+			"description": "Password to admin login to GD portal."
+		},
+		"pid": {
+			"type": "string",
+			"title": "GoodData Project ID",
+			"description": "GD Project ID"
+		},
+		"#sapi_token": {
+			"type": "string",
+			"format": "password",
+			"title": "Keboola Storage API Token",
+			"description": "SAPI Token"
+		},
+		"domain_region": {
+			"type": "string",
+			"title": "KBC Project Region",
+			"description": "Region of KBC project",
+			"enum": [
+				"US",
+				"EU"
+			],
+			"default": "US"
+		},
+		"domain_custom": {
+			"type": "string",
+			"title": "GD custom domain",
+			"description": "If your GD project is whitelabeled, provide the domain. Format: https://domain.com",
+			"default": ""
+		}
+	}
 }
