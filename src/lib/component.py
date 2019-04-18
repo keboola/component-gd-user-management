@@ -601,7 +601,7 @@ class componentRunner:
                             elif _sc == 422:
 
                                 self.log.make_log(
-                                    user.login, "USER_CREATE", True, user.role, _js['errorMessage'], user.muf)
+                                    user.login, "USER_CREATE", False, user.role, _js['errorMessage'], user.muf)
 
                                 logging.warn(
                                     "There were some errors for user %s." % _login)
