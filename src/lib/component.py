@@ -25,6 +25,7 @@ class componentRunner:
         self._get_all_users()
         self._map_roles()
         self._GD_check_user_admin()
+        self._GD_check_admin_permissions()
 
     def _get_all_attributes(self):
 
@@ -114,6 +115,22 @@ class componentRunner:
         self.log.make_log('admin', 'MAP_ROLES', True, '',
                           json.dumps(_role_matrix), '')
 
+    def _GD_check_admin_permissions(self):
+
+        _login = self.client.username
+        _login_uri = self.users_GD[_login]['uri']
+
+        _sc, _js = self.client._GD_get_data_permissions_for_user(_login_uri)
+
+        _usr_filters = _js["userFilters"]["items"]
+
+        if len(_usr_filters) != 0:
+
+            logging.error("Admin account cannot have any data permissions assigned to them. Please, use" +
+                          " a different user or remove data permissions.")
+
+            sys.exit(1)
+
     def _GD_check_user_admin(self):
 
         _login = self.client.username
@@ -198,6 +215,11 @@ class componentRunner:
                     return False, "Attribute %s has no URI." % _attr
 
                 _attr_vals = self.get_attribute_values(_attr_uri)
+
+                if _attr_vals is False:
+
+                    return False, "Could not obtain values for attribute %s" % _attr_uri
+
                 _attr_vals_uri = []
 
                 for v in _val:
@@ -247,7 +269,11 @@ class componentRunner:
             A dictionary, with values' title as a key and respective URI as a value.
         """
 
-        _values = self.client._GD_get_attribute_values(attribute_uri)
+        _sc, _values = self.client._GD_get_attribute_values(attribute_uri)
+
+        if _sc is False:
+
+            return False
 
         _val_out = {}
 
@@ -351,11 +377,11 @@ class componentRunner:
         _login = user.login
         _user_action = user.action
 
-        if _user_action not in ("ENABLE", "DISABLE"):
+        if _user_action not in ("ENABLE", "DISABLE", "INVITE"):
 
             self.log.make_log(_login, _user_action, False,
                               user.role, "User action must be ENABLE or DISABLE.", '')
-            self._app_action = 'SKIP'
+            user._app_action = 'SKIP'
 
             return
 
@@ -369,19 +395,27 @@ class componentRunner:
 
             if _status == 'ENABLED' and _user_action == 'ENABLE':
 
-                user._app_action = 'DISABLE MUF ENABLE'
+                user._app_action = 'GD_DISABLE MUF GD_ENABLE'
 
             elif _status == 'ENABLED' and _user_action == 'DISABLE':
 
-                user._app_action = 'DISABLE'
+                user._app_action = 'GD_DISABLE'
 
             elif _status == 'DISABLED' and _user_action == 'ENABLE':
 
-                user._app_action = 'MUF INVITE'
+                user._app_action = 'GD_DISABLE MUF GD_ENABLE'
 
             elif _status == 'DISABLED' and _user_action == 'DISABLE':
 
                 user._app_action = 'SKIP'
+
+            elif _status == 'ENABLED' and _user_action == 'INVITE':
+
+                user._app_action = 'GD_DISABLE MUF GD_ENABLE'
+
+            elif _status == 'DISABLED' and _user_action == 'INVITE':
+
+                user._app_action = 'MUF GD_INVITE'
 
             else:
 
@@ -394,11 +428,15 @@ class componentRunner:
 
             if _user_action == 'ENABLE':
 
-                user._app_action = 'MUF INVITE'
+                user._app_action = 'KB_DISABLE MUF KB_ENABLE'
 
             elif _user_action == 'DISABLE':
 
                 user._app_action = 'SKIP'
+
+            elif _user_action == 'INVITE':
+
+                user._app_action = 'MUF GD_INVITE'
 
             else:
 
@@ -408,7 +446,14 @@ class componentRunner:
         elif _in_prj is False and _in_org is False:
 
             user.uri = None
-            user._app_action = 'CREATE MUF INVITE'
+
+            if user.action == 'DISABLE':
+
+                user._app_action == 'SKIP'
+
+            else:
+
+                user._app_action = 'TRY_KB_CREATE MUF ENABLE_OR_INVITE'
 
         else:
 
@@ -498,13 +543,24 @@ class componentRunner:
                         continue
 
                     self.check_membership(user)
+
+                    logging.info("User %s was assigned the following action: %s" % (
+                        user.login, user._app_action))
+
                     self.map_role_to_uri(user)
 
                     if user._app_action == 'SKIP':
 
+                        self.log.make_log(user.login, "NO_ACTION", True,
+                                          user.role, "No action needed.", user.muf)
+
+                        logging.debug("Skipping user %s" % user.login)
+
                         continue
 
-                    elif user._app_action == 'DISABLE':
+                    elif user._app_action == 'GD_DISABLE':
+
+                        logging.debug("Attemmpting to disable user %s" % user.login)
 
                         _sc, _js = self.client._GD_remove_user_from_project(
                             user.uri)
@@ -519,7 +575,10 @@ class componentRunner:
                             self.log.make_log(user.login, "DISABLE_IN_PRJ", False,
                                               user.role, _js, user.muf)
 
-                    elif user._app_action == 'DISABLE MUF ENABLE':
+                    elif user._app_action == 'GD_DISABLE MUF GD_ENABLE':
+
+                        logging.debug("User %s will be disabled, assigned MUFs and re-enabled." % user.login)
+                        logging.debug("Disabling...")
 
                         _sc, _js = self.client._GD_remove_user_from_project(
                             user.uri)
@@ -538,6 +597,7 @@ class componentRunner:
                                 "There were some errors for user %s." % _login)
                             continue
 
+                        logging.debug("Creating MUFs...")
                         _status, _muf = self.create_muf_uri(user)
 
                         logging.debug(_muf)
@@ -548,8 +608,7 @@ class componentRunner:
                                 "There were some errors for user %s when creating URIs for MUFs." % _login)
                             continue
 
-                        logging.debug(_muf)
-
+                        logging.debug("Assigning MUFs...")
                         _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
 
                         if _sc == 200:
@@ -568,6 +627,7 @@ class componentRunner:
                                 "There were some errors for user %s when assigning MUFs." % _login)
                             continue
 
+                        logging.debug("Re-enabling user...")
                         _sc, _js = self.client._GD_add_user_to_project(
                             user.uri, user.role_uri)
 
@@ -585,9 +645,11 @@ class componentRunner:
                             logging.warn(
                                 "There were some errors for user %s." % _login)
 
-                    elif user._app_action in ('MUF INVITE', 'CREATE MUF INVITE'):
+                    elif user._app_action in ('MUF GD_INVITE', 'TRY_KB_CREATE MUF ENABLE_OR_INVITE'):
 
-                        if user._app_action == 'CREATE MUF INVITE':
+                        if user._app_action == 'TRY_KB_CREATE MUF ENABLE_OR_INVITE':
+
+                            logging.debug("Attempting to create user %s in organization." % user.login)
 
                             _sc, _js = self.client._KBC_create_user(
                                 user.login, user.first_name, user.last_name)
@@ -597,6 +659,8 @@ class componentRunner:
                                 user.uri = '/gdc/account/profile/' + _js['uid']
                                 self.log.make_log(
                                     user.login, "USER_CREATE", True, user.role, user.uri, user.muf)
+
+                                logging.debug("User created successfully. URI: %s" % user.uri)
 
                             elif _sc == 422:
 
@@ -612,6 +676,8 @@ class componentRunner:
                                 logging.warn(
                                     "User %s already exists in a different organization." % user.login)
 
+                        logging.debug("Creating MUFs...")
+
                         _status, _muf = self.create_muf_uri(user)
 
                         if _status is False:
@@ -620,26 +686,65 @@ class componentRunner:
                                 "Could not create MUF for user %s." % _login)
                             continue
 
-                        _dict = {'_email': user.login,
-                                 '_role': user.role_uri,
-                                 '_usrFilter': _muf}
+                        if user.uri is None or (user.uri is not None and user.action == 'INVITE'):
 
-                        _sc, _js = self.client._GD_invite_users_to_project(
-                            _dict)
+                            logging.debug("Inviting user...")
 
-                        _d_mismatch = _js['createdInvitations']['loginsDomainMismatch']
-                        _d_inproject = _js['createdInvitations']['loginsAlreadyInProject']
+                            _dict = {'_email': user.login,
+                                     '_role': user.role_uri,
+                                     '_usrFilter': _muf}
 
-                        if len(_d_mismatch) == 0 and len(_d_inproject) == 0:
+                            _sc, _js = self.client._GD_invite_users_to_project(
+                                _dict)
 
-                            self.log.make_log(user.login, "INVITE_TO_PRJ", True,
-                                              user.role, '', user.muf)
+                            _d_mismatch = _js['createdInvitations']['loginsDomainMismatch']
+                            _d_inproject = _js['createdInvitations']['loginsAlreadyInProject']
+
+                            if len(_d_mismatch) == 0 and len(_d_inproject) == 0:
+
+                                self.log.make_log(user.login, "INVITE_TO_PRJ", True,
+                                                  user.role, '', user.muf)
+
+                            else:
+
+                                logging.warn(
+                                    "There were some errors for user %s." % _login)
+                                self.log.make_log(user.login, "INVITE_TO_PRJ", False,
+                                                  user.role, _js, user.muf)
 
                         else:
 
-                            logging.warn(
-                                "There were some errors for user %s." % _login)
-                            self.log.make_log(user.login, "INVITE_TO_PRJ", False,
-                                              user.role, _js, user.muf)
+                            logging.debug("Assigning MUFs...")
+
+                            _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
+
+                            if _sc == 200:
+
+                                self.log.make_log(user.login, "ASSIGN_MUF", True,
+                                                  user.role, '', user.muf)
+
+                            else:
+
+                                self.log.make_log(user.login, "ASSIGN_MUF", False,
+                                                  user.role, _js, user.muf)
+
+                                logging.debug(_js)
+
+                                logging.warn(
+                                    "There were some errors for user %s when assigning MUFs." % _login)
+                                continue
+
+                            logging.debug("Enabling user in the project...")
+                            _sc, _js = self.client._KBC_add_user_to_project(user.login, user.role)
+
+                            if _sc == 204:
+
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                                                  user.role, '', user.muf)
+
+                            else:
+
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                                                  user.role, _js, user.muf)
 
                     logging.info("Process for user %s has ended." % user.login)

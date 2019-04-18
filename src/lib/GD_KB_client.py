@@ -191,7 +191,7 @@ class clientGoodDataKeboola:
             logging.error(
                 "Could not obtain attribute values for attribute %s." % attribute_uri)
 
-            return att_sc, None
+            return False, "Could not obtain attribute values for attribute %s." % attribute_uri
 
         _elmts = attr_response.json(
         )['attribute']['content']['displayForms'][0]['links']['elements']
@@ -217,7 +217,7 @@ class clientGoodDataKeboola:
             else:
                 hasMore = False
 
-        return _out_elements
+        return True, _out_elements
 
     def _KBC_get_users(self):
 
@@ -456,3 +456,17 @@ class clientGoodDataKeboola:
         af_rsp = requests.post(url, headers=self._GD_header, data=_data)
 
         return self.rsp_splitter(af_rsp)
+
+    def _GD_get_data_permissions_for_user(self, user_uri):
+
+        url = self.gd_url + f'/gdc/md/{self.pid}/userfilters'
+
+        self._GD_build_header()
+
+        _params = {"users": f'{user_uri}'}
+
+        logging.debug(_params)
+
+        uf_rsp = requests.get(url, headers=self._GD_header, params=_params)
+
+        return self.rsp_splitter(uf_rsp)
