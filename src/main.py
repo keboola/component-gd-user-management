@@ -55,7 +55,7 @@ except KeyError as e:
 
 logging.info("Successfully fetched all parameters.")
 
-_token = os.getenv('KBC_TOKEN')
+_token = os.getenv('DATA_LOADER_ENV_KBC_TOKEN')
 
 if _token:
 
