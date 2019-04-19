@@ -428,7 +428,7 @@ class componentRunner:
 
             if _user_action == 'ENABLE':
 
-                user._app_action = 'KB_DISABLE MUF KB_ENABLE'
+                user._app_action = 'MUF KB_ENABLE'
 
             elif _user_action == 'DISABLE':
 
@@ -746,5 +746,51 @@ class componentRunner:
 
                                 self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
                                                   user.role, _js, user.muf)
+
+                    elif user._app_action == 'MUF KB_ENABLE':
+
+                        logging.debug("User will be assigned MUFs and enabled.")
+                        logging.debug("Creating MUFs...")
+
+                        _status, _muf = self.create_muf_uri(user)
+
+                        if _status is False:
+
+                            logging.warn(
+                                "Could not create MUF for user %s." % user.login)
+                            continue
+
+                        logging.debug("Assigning MUFs...")
+
+                        _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
+
+                        if _sc == 200:
+
+                            self.log.make_log(user.login, "ASSIGN_MUF", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "ASSIGN_MUF", False,
+                                              user.role, _js, user.muf)
+
+                            logging.debug(_js)
+
+                            logging.warn(
+                                "There were some errors for user %s when assigning MUFs." % _login)
+                            continue
+
+                        logging.debug("Enabling user in the project...")
+                        _sc, _js = self.client._KBC_add_user_to_project(user.login, user.role)
+
+                        if _sc == 204:
+
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                                              user.role, _js, user.muf)
 
                     logging.info("Process for user %s has ended." % user.login)
