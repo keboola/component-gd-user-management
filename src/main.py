@@ -55,8 +55,6 @@ except KeyError as e:
 
 logging.info("Successfully fetched all parameters.")
 
-logging.info(os.environ)
-
 # Tables congig
 in_tables = cfg.get_input_tables()
 
