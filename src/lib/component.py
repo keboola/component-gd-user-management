@@ -649,7 +649,7 @@ class componentRunner:
 
                         if user._app_action == 'TRY_KB_CREATE MUF ENABLE_OR_INVITE':
 
-                            logging.debug("Attempting to create user %s in organization." % user.login)
+                            logging.info("Attempting to create user %s in organization." % user.login)
 
                             _sc, _js = self.client._KBC_create_user(
                                 user.login, user.first_name, user.last_name)
@@ -677,7 +677,6 @@ class componentRunner:
                                     "User %s already exists in a different organization." % user.login)
 
                         logging.debug("Creating MUFs...")
-
                         _status, _muf = self.create_muf_uri(user)
 
                         if _status is False:
@@ -708,7 +707,7 @@ class componentRunner:
                             else:
 
                                 logging.warn(
-                                    "There were some errors for user %s." % _login)
+                                    "There were some errors when inviting user %s." % _login)
                                 self.log.make_log(user.login, "INVITE_TO_PRJ", False,
                                                   user.role, _js, user.muf)
 
