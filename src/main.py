@@ -55,15 +55,7 @@ except KeyError as e:
 
 logging.info("Successfully fetched all parameters.")
 
-_token = os.getenv('DATA_LOADER_ENV_KBC_TOKEN')
-
-if _token:
-
-    logging.info("Project ID is %s" % _token[0:4])
-
-else:
-
-    logging.info("No info available.")
+logging.info(os.environ)
 
 # Tables congig
 in_tables = cfg.get_input_tables()
