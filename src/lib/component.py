@@ -43,7 +43,7 @@ class Component(KBCEnvHandler):
 
         if self.client.pid not in _projects_ids:
 
-            logging.error("GoodData Project ID %s is not located in this project.")
+            logging.error("GoodData Project ID %s is not located in this project." % self.client.pid)
             logging.error("You can't provision users from a different project than the origin project.")
             sys.exit(1)
 
