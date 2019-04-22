@@ -24,7 +24,7 @@
 		},
 		"pid": {
 			"type": "string",
-			"title": "GD Prooject ID",
+			"title": "GD Project ID",
 			"description": "GoodData project ID. See description for more info.",
 			"propertyOrder": 300
 		},
