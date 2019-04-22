@@ -201,9 +201,14 @@ class Component(KBCEnvHandler):
 
         for mf in _muf_json:
 
-            _attr = mf['attribute']
-            _val = mf['value']
-            _oper = mf['operator']
+            try:
+                _attr = mf['attribute']
+                _val = mf['value']
+                _oper = mf['operator']
+
+            except KeyError as e:
+
+                return False, "Key %s is missing in MUF json." % e
 
             logging.debug(_attr)
             logging.debug(_val)
