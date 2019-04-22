@@ -7,34 +7,19 @@ import secrets
 
 class clientGoodDataKeboola:
 
-    def __init__(self, username, password, pid, region, domain, sapi_token):
+    def __init__(self, username, password, pid, domain, gd_url, kbc_url, sapi_token):
 
         self.username = username
         self.password = password
         self.pid = pid
-        self.region = region
         self.sapi_token = sapi_token
+        self.kbc_url = kbc_url
         self._KBC_header = {'X-StorageApi-Token': self.sapi_token}
 
         if domain.strip() != '':
             self.gd_url = domain.strip()
         else:
-            if self.region == 'EU':
-                self.gd_url = 'https://keboola.eu.gooddata.com'
-            elif self.region == 'US':
-                self.gd_url = 'https://secure.gooddata.com'
-            else:
-                logging.error("Please select a valid region for GD project.")
-                sys.exit(1)
-
-        if self.region == 'US':
-            self.kbc_url = 'https://gooddata-provisioning.keboola.com'
-        elif self.region == 'EU':
-            self.kbc_url = 'https://gooddata-provisioning.eu-central-1.keboola.com'
-        else:
-            logging.error(
-                "Provided regions does not match one of EU/US options.")
-            sys.exit(1)
+            self.gd_url = gd_url
 
         logging.info("GD domain set to %s." % self.gd_url)
         logging.info("KBC domain set to %s." % self.kbc_url)
@@ -218,6 +203,26 @@ class clientGoodDataKeboola:
                 hasMore = False
 
         return True, _out_elements
+
+    def _KBC_get_projects(self):
+
+        url = self.kbc_url + '/projects'
+
+        prj_response = requests.get(url, headers=self._KBC_header)
+
+        prj_sc, prj_json = self.rsp_splitter(prj_response)
+
+        if prj_sc in (200, 201, 202):
+
+            return prj_json
+
+        else:
+
+            logging.error(
+                "Could not obtain projects.")
+            logging.error("Status code received %s." % prj_sc)
+            logging.error("Response: %s" % json.dumps(prj_json))
+            sys.exit(1)
 
     def _KBC_get_users(self):
 

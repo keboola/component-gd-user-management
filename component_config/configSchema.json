@@ -5,8 +5,6 @@
 		"username",
 		"#password",
 		"pid",
-		"#sapi_token",
-		"domain_region",
 		"domain_custom"
 	],
 	"properties": {
@@ -29,24 +27,6 @@
 			"title": "GoodData Project ID",
 			"description": "GD Project ID",
 			"propertyOrder": 300
-		},
-		"#sapi_token": {
-			"type": "string",
-			"format": "password",
-			"title": "Keboola Storage API Token",
-			"description": "SAPI Token",
-			"propertyOrder": 400
-		},
-		"domain_region": {
-			"type": "string",
-			"title": "KBC Project Region",
-			"description": "Region of KBC project",
-			"enum": [
-				"US",
-				"EU"
-			],
-			"default": "US",
-			"propertyOrder": 500
 		},
 		"domain_custom": {
 			"type": "string",

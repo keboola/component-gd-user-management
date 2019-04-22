@@ -6,26 +6,46 @@ import sys
 from lib.GD_KB_client import clientGoodDataKeboola
 from lib.logger import componentLogger
 from lib.user import User
+from kbc.env_handler import KBCEnvHandler
 
 
-class componentRunner:
+class Component(KBCEnvHandler):
 
-    def __init__(self, username, password, pid,
-                 region, domain, sapi_token, data_path,
-                 input_files):
+    def __init__(self, username_key, password_key, pid_key,
+                 domain_key, gd_url_key, kbc_prov_key, MANDATORY_PARS):
 
-        self.client = clientGoodDataKeboola(username, password, pid,
-                                            region, domain, sapi_token)
+        KBCEnvHandler.__init__(self, MANDATORY_PARS)
 
-        self.input_files = input_files
-        self.data_path = data_path
+        sapi_token = self.get_storage_token()
+        username = self.cfg_params[username_key]
+        password = self.cfg_params[password_key]
+        pid = self.cfg_params[pid_key]
+        domain = self.cfg_params[domain_key]
+        gd_url = self.image_params[gd_url_key]
+        kbc_prov_url = self.image_params[kbc_prov_key]
 
-        self.log = componentLogger(data_path)
+        self.client = clientGoodDataKeboola(username, password, pid, domain,
+                                            gd_url, kbc_prov_url, sapi_token)
+
+        self.input_files = self.configuration.get_input_tables()
+        self.log = componentLogger(self.data_path)
+        self._compare_projects()
         self._get_all_attributes()
         self._get_all_users()
         self._map_roles()
         self._GD_check_user_admin()
         self._GD_check_admin_permissions()
+
+    def _compare_projects(self):
+
+        _projects = self.client._KBC_get_projects()
+        _projects_ids = [p['pid'] for p in _projects]
+
+        if self.client.pid not in _projects_ids:
+
+            logging.error("GoodData Project ID %s is not located in this project.")
+            logging.error("You can't provision users from a different project than the origin project.")
+            sys.exit(1)
 
     def _get_all_attributes(self):
 

@@ -1,1 +1,14 @@
-{}
+{
+    "connection.keboola.com": {
+      "provisioning_url": "https://gooddata-provisioning.keboola.com",
+      "gd_url": "https://secure.gooddata.com"
+    },
+    "connection.eu-central-1.keboola.com": {
+      "provisioning_url": "https://gooddata-provisioning.eu-central-1.keboola.com",
+      "gd_url": "https://keboola.eu.gooddata.com"
+    },
+    "connection.ap-southeast-2.keboola.com": {
+        "provisioning_url": "https://gooddata-provisioning.ap-southeast-2.keboola.com",
+        "gd_url": "https://secure.gooddata.com"
+    }
+  }

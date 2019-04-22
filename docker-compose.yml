@@ -1,4 +1,4 @@
-version: "2"
+version: "0.0.11"
 services:
   # for development purposes
   dev:
@@ -8,6 +8,10 @@ services:
         - ./data:/data
     environment:
       - KBC_DATADIR=./data
+      - KBC_TOKEN=XXXX-XXXXXXXXXXXXXXXXXXXX
+    command: 
+      - /bin/sh
+      - /code/scripts/run.sh
   test:
     # Use to run flake8 and unittests checks
     build: .
