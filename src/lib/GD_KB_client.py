@@ -7,7 +7,36 @@ import secrets
 
 class clientGoodDataKeboola:
 
+    """
+    Main class for REST requests to GD API.
+
+    See API reference for both services; links below:
+    GoodData API Reference: https://help.gooddata.com/display/API/API+Reference
+    Keboola GoodData Provisioning API: https://keboolagooddataprovisioning.docs.apiary.io/
+    """
+
     def __init__(self, username, password, pid, domain, gd_url, kbc_url, sapi_token):
+
+        """
+        Client class initialization.
+
+        Parameters
+        ----------
+        username : str
+            Login to GoodData portal. A login for admin account with no data permissions must be provided.
+        password : str
+            Password to GD login provided in the first argument.
+        pid : str
+            GoodData project ID.
+        domain : str
+            Custom domain for GD, if the project is whitelabeled.
+        gd_url : str
+            Stack parameter, default GD URL.
+        kbc_url : str
+            Stack parameter, default KBC Provisioning API URL.
+        sapi_token : str
+            Environment variabel, storage API token to Keboola.
+        """
 
         self.username = username
         self.password = password
@@ -27,6 +56,26 @@ class clientGoodDataKeboola:
         self._GD_get_SST_token()
 
     def _GD_get_SST_token(self):
+
+        """
+        A function for obtaining super token to GD API.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+        SST token : str
+            Super token used for obtaining TT token.
+
+        Raises
+        ------
+        KeyError
+            If login is successful, but token is not in the response.
+        SystemExit
+            If login is not successful.
+        """
 
         _data = f'''{{
             "postUserLogin":{{
@@ -53,7 +102,7 @@ class clientGoodDataKeboola:
             try:
                 self.SST_token = auth_json['userLogin']['token']
                 logging.info(
-                    "Login to GoodData was successfull. SST token obtained.")
+                    "Login to GoodData was successful. SST token obtained.")
                 # logging.debug("SST Token: %s" % self.SST_token)
 
             except KeyError:
@@ -69,8 +118,25 @@ class clientGoodDataKeboola:
 
     def _GD_get_TT_token(self):
 
-        # if not self.SST_token:
-        #    self._GD_get_SST_token()
+        """
+        Function for obtaining TT token.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+        TT token : str
+            TT token used in every request made to GD API.
+
+        Raises
+        ------
+        KeyError
+            If login using SST is successful, but TT token was not in response.
+        SystemExit
+            If TT token could not be obtained using SST token.
+        """
 
         headers = {"Content-Type": "application/json",
                    "Accept": "application/json",
@@ -101,6 +167,18 @@ class clientGoodDataKeboola:
 
     def _GD_build_header(self):
 
+        """
+        Function for building header for GD request. TT token needs to be refreshed after almost every request.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns:
+        _GD_header : dict
+            A header used for requests to GoodData.
+        """
+
         self._GD_get_TT_token()
 
         _header = {"Content-Type": "application/json",
@@ -112,6 +190,18 @@ class clientGoodDataKeboola:
         # logging.debug("Request header: %s" % _header)
 
     def _GD_get_users(self):
+
+        """
+        Function for getting all users (active and disabled), currently in the project.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+
+        """
 
         self._GD_build_header()
 
@@ -131,6 +221,24 @@ class clientGoodDataKeboola:
             sys.exit(1)
 
     def _GD_get_attributes(self):
+
+        """
+        Function for getting all attributes in the project.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+        att_json : dict
+            A dictionary of users and their attributes.
+
+        Raises
+        ------
+        SystemExit
+            If a list of users could not be obtained.
+        """
 
         self._GD_build_header()
 
@@ -155,6 +263,23 @@ class clientGoodDataKeboola:
 
     def rsp_splitter(self, rsp):
 
+        """
+        A function for splitting requests.response class.
+
+        Parameters
+        ----------
+        self : class
+        rsp : request.Response class
+            A response received from a request.
+
+        Returns
+        -------
+        status_code : int
+            A status code of the response.
+        json : dict
+            A json response.
+        """
+
         try:
             _rtrn_json = rsp.json()
         except ValueError:
@@ -163,6 +288,23 @@ class clientGoodDataKeboola:
         return rsp.status_code, _rtrn_json
 
     def _GD_get_attribute_values(self, attribute_uri):
+
+        """
+        A function for obtaining attribute values for given attribute.
+
+        Parameters
+        ----------
+        self : class
+        attribute_uri : str
+            A URI for an attribute, for which values shall be obtained.
+
+        Returns
+        -------
+        tuple
+            A tuple of lenght 2. First element indicates success of the operation. In case the operation is successful
+            the second element is a list of dictionaries with attribute values and their URI. If unsuccessful, the
+            second element is an error message.
+        """
 
         self._GD_build_header()
 
@@ -206,6 +348,24 @@ class clientGoodDataKeboola:
 
     def _KBC_get_projects(self):
 
+        """
+        A function to obtain all projects within a KBC project.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+        prj_json : list
+            A list of dictionaries containing project information for all projects.
+
+        Raises
+        ------
+        SystemExit
+            If the list could not be obtained.
+        """
+
         url = self.kbc_url + '/projects'
 
         prj_response = requests.get(url, headers=self._KBC_header)
@@ -225,6 +385,24 @@ class clientGoodDataKeboola:
             sys.exit(1)
 
     def _KBC_get_users(self):
+
+        """
+        A function for obtaining all users provisioned within the project.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+        usr_json : list
+            A list of dictionaries; each dictionary represents one user provisioned by Keboola.
+
+        Raises
+        ------
+        SystemExit
+            If a list of users could not be obtained.
+        """
 
         url = self.kbc_url + '/users'
 
@@ -246,6 +424,25 @@ class clientGoodDataKeboola:
 
     def _KBC_create_user(self, login, first_name, last_name):
 
+        """
+        A function for creating user within Keboola domain.
+
+        Parameters
+        ----------
+        self : class
+        login : str
+            A login to be used by the user.
+        first_name : str
+            A first name of the user. Cannot be empty.
+        last_name : str
+            A last name of the user. Cannot be empty.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
+
         url = self.kbc_url + '/users'
         _pswd = secrets.token_hex(16)
 
@@ -265,6 +462,21 @@ class clientGoodDataKeboola:
 
     def _KBC_remove_user_from_project(self, login):
 
+        """
+        A function for removing user from the project using Keboola API.
+
+        Parameters
+        ----------
+        self : class
+        login : str
+            Login to be removed from the project.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
+
         url = self.kbc_url + f'/projects/{self.pid}/users/{login}'
 
         du_response = requests.delete(url, headers=self._KBC_header)
@@ -272,6 +484,23 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(du_response)
 
     def _KBC_add_user_to_project(self, login, role):
+
+        """
+        A function for adding users to a project using Keboola API.
+
+        Parameters
+        ----------
+        self : class
+        login : str
+            Login to be added to a project.
+        role : str
+            Role of a newly added member. Must be one of admin, editor, readOnly, dashboardOnly, keboolaEditorPlus.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
 
         url = self.kbc_url + f'/projects/{self.pid}/users/{login}'
 
@@ -286,6 +515,21 @@ class clientGoodDataKeboola:
 
     def _GD_get_role_details(self, role_uri):
 
+        """
+        A function for getting details about roles in GoodData.
+
+        Parameters
+        ----------
+        self : class
+        role_uri : str
+            URI of a GD role.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
+
         url = self.gd_url + role_uri
         self._GD_build_header()
 
@@ -293,6 +537,24 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(role_detail_request)
 
     def _GD_get_roles(self):
+
+        """
+        A function for getting all roles and their details.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+
+        Raises
+        ------
+        SystemExit
+            If a list of roles could not be obtained.
+        """
 
         url = self.gd_url + f'/gdc/projects/{self.pid}/roles'
 
@@ -325,6 +587,23 @@ class clientGoodDataKeboola:
 
     def _GD_add_user_to_project(self, user_uri, role_uri):
 
+        """
+        A function for adding user to a project using GD API.
+
+        Parameters
+        ----------
+        self : class
+        user_uri : str
+            URI of an account to be added to the project.
+        role_uri : str
+            An URI of a role to be assigned to the person.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
+
         url = self.gd_url + f'/gdc/projects/{self.pid}/users'
 
         self._GD_build_header()
@@ -350,6 +629,21 @@ class clientGoodDataKeboola:
 
     def _GD_remove_user_from_project(self, user_uri):
 
+        """
+        A function to remove users from project using GD API.
+
+        Parameters
+        ----------
+        self : class
+        user_uri : str
+            A URI of an account to be disabled in the project.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
+
         url = self.gd_url + f'/gdc/projects/{self.pid}/users'
 
         self._GD_build_header()
@@ -371,6 +665,21 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(ru_response)
 
     def _GD_invite_users_to_project(self, invitation_dict):
+
+        """
+        A function to create invitations to the GD project.
+
+        Parameters
+        ----------
+        self : class
+        invitation_dict : dict
+            A dictionary containing information about login, role and data filters to be applied.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
 
         url = self.gd_url + f'/gdc/projects/{self.pid}/invitations'
 
@@ -407,11 +716,41 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(inv_response)
 
     @staticmethod
-    def list_to_str(list):
+    def list_to_str(l):
 
-        return '[' + ','.join('"{0}"'.format(x) for x in list) + ']'
+        """
+        A function to convert list to list-like string.
+
+        Parameters
+        ----------
+        l : list
+
+        Returns
+        -------
+        str
+            A string that represents inputted list..
+        """
+
+        return '[' + ','.join('"{0}"'.format(x) for x in l) + ']'
 
     def _GD_create_MUF(self, expression, name):
+
+        """
+        A function to create MUF expressions in the project.
+
+        Parameters
+        ----------
+        self : class
+        expression : str
+            A string expressions of data permissions to be applied.
+        name : str
+            A name of the expression.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
 
         url = self.gd_url + f'/gdc/md/{self.pid}/obj'
 
@@ -438,6 +777,23 @@ class clientGoodDataKeboola:
 
     def _GD_assign_MUF(self, user, userFilters):
 
+        """
+        A function to assign MUFs to a user.
+
+        Parameters
+        ----------
+        self : class
+        user : str
+            A login, to which the filter should be applied.
+        userFilters : list
+            A list of filter to be applied.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
+
         url = self.gd_url + f'/gdc/md/{self.pid}/userfilters'
 
         self._GD_build_header()
@@ -463,6 +819,21 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(af_rsp)
 
     def _GD_get_data_permissions_for_user(self, user_uri):
+
+        """
+        A function for getting data permissions for a user.
+
+        Parameters
+        ----------
+        self : class
+        user_uri : str
+            An URI of the admin user.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
 
         url = self.gd_url + f'/gdc/md/{self.pid}/userfilters'
 

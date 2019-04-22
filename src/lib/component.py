@@ -4,15 +4,45 @@ import logging
 import os
 import sys
 from lib.GD_KB_client import clientGoodDataKeboola
-from lib.logger import componentLogger
+from lib.logger import Logger
 from lib.user import User
 from kbc.env_handler import KBCEnvHandler
 
 
 class Component(KBCEnvHandler):
 
+    """
+    The main component class, a children class of KBCEnvHandler.
+
+    See keboola-python-util-lib package: https://bitbucket.org/kds_consulting_team/keboola-python-util-lib/src/master/
+    """
+
     def __init__(self, username_key, password_key, pid_key,
                  domain_key, gd_url_key, kbc_prov_key, MANDATORY_PARS):
+        """
+        Init function.
+        In addition to initialization of the class, the function checks whether provided PID is in the list
+        of PIDs provisioned by the Keboola GD Writer, obtains attributes of the whole GD project, extracts users
+        from both Keboola and GD environments, maps Keboola roles to GD roles, checks admin privileges and ensures
+        the admin user has no data permissions assigned to themselves.
+
+        Parameters
+        ----------
+        username_key : str
+            A key in dictionary for username parameter.
+        password_key : str
+            A key in dictionary for password parameter.
+        pid_key : str
+            A key in dictionary for PID parameter.
+        domain_key : str
+            A key in dictionary for domain parameter.
+        gd_url_key : str
+            A key in dictionary for GD URL stack parameter.
+        kbc_prov_key : str
+            A key in dictionary for Keboola Provisioning API stack parameter.
+        MANDATORY_PARAMS : list
+            A list of mandatory parameters.
+        """
 
         KBCEnvHandler.__init__(self, MANDATORY_PARS)
 
@@ -28,7 +58,7 @@ class Component(KBCEnvHandler):
                                             gd_url, kbc_prov_url, sapi_token)
 
         self.input_files = self.configuration.get_input_tables()
-        self.log = componentLogger(self.data_path)
+        self.log = Logger(self.data_path)
         self._compare_projects()
         self._get_all_attributes()
         self._get_all_users()
@@ -37,17 +67,38 @@ class Component(KBCEnvHandler):
         self._GD_check_admin_permissions()
 
     def _compare_projects(self):
+        """
+        A function, that compares provided PID with those provisioned by GD Writer.
+
+        Parameters
+        ----------
+        self : class
+
+        Raises
+        ------
+        SystemExit
+            If the provided PID is not in the list of projects provosioned by Keboola.
+        """
 
         _projects = self.client._KBC_get_projects()
         _projects_ids = [p['pid'] for p in _projects]
 
         if self.client.pid not in _projects_ids:
 
-            logging.error("GoodData Project ID %s is not located in this project." % self.client.pid)
-            logging.error("You can't provision users from a different project than the origin project.")
+            logging.error(
+                "GoodData Project ID %s is not located in this project." % self.client.pid)
+            logging.error(
+                "You can't provision users from a different project than the origin project.")
             sys.exit(1)
 
     def _get_all_attributes(self):
+        """
+        A function for obtaining all attributes from the GD project.
+
+        Parameters
+        ----------
+        self : class
+        """
 
         logging.info("Obtaining all attributes for the project.")
         _att_out = {}
@@ -66,6 +117,13 @@ class Component(KBCEnvHandler):
         self.log.make_log('admin', 'GET_ATTRIBUTES', True, '', '', '')
 
     def _get_all_users(self):
+        """
+        A function to obtain all users provisioned by Keboola and within GD project.
+
+        Parameters
+        ----------
+        self : class
+        """
 
         _GD_users = self.client._GD_get_users()['users']
         _GD_users_out = {}
@@ -104,6 +162,19 @@ class Component(KBCEnvHandler):
         self.users_KB = _KB_users_out
 
     def _map_roles(self):
+        """
+        A function mapping GD roles to KBC ones.
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+
+        Raises
+        ------
+        """
 
         logging.info("Mapping GD roles to KBC equivalents.")
         _GD_roles = self.client._GD_get_roles()
@@ -136,6 +207,18 @@ class Component(KBCEnvHandler):
                           json.dumps(_role_matrix), '')
 
     def _GD_check_admin_permissions(self):
+        """
+        A function checking, whether admin user has any data permissions assigned to them.
+
+        Parameters
+        ----------
+        self : class
+
+        Raises
+        ------
+        SystemExit
+            If the admin user has admin permissions assigned.
+        """
 
         _login = self.client.username
         _login_uri = self.users_GD[_login]['uri']
@@ -152,6 +235,18 @@ class Component(KBCEnvHandler):
             sys.exit(1)
 
     def _GD_check_user_admin(self):
+        """
+        A function checking whether provided user is admin within GD project.
+
+        Parameters
+        ----------
+        self : class
+
+        Raises
+        ------
+        SystemExit
+            If provided user is not admin.
+        """
 
         _login = self.client.username
 
@@ -188,6 +283,22 @@ class Component(KBCEnvHandler):
             sys.exit(1)
 
     def create_muf_expression(self, muf_str):
+        """
+        A function for creating MUF expressions, i.e. attributes' and values' names are replaced by their URIs.
+
+        Parameters
+        ----------
+        self : class
+        muf_str : str
+            A string containing MUF expression.
+
+        Returns
+        -------
+        tuple
+            A tuple of length 2. The first element marks, whether the operation was successful. If the first element
+            is true, the second element is a list of user filters expressions. If the first element is false, the
+            second element is an error message.
+        """
 
         try:
 
@@ -398,6 +509,20 @@ class Component(KBCEnvHandler):
         return True, _muf_ids
 
     def check_membership(self, user):
+        """
+        A function checking whether a user is in the Keboola organization or GD project.
+
+        Parameters
+        ----------
+        self : class
+        user : User class
+            A class representing user.
+
+        Raises
+        ------
+        SystemExit
+            If none of the conditions is met.
+        """
 
         _login = user.login
         _user_action = user.action
@@ -486,6 +611,24 @@ class Component(KBCEnvHandler):
             sys.exit(2)
 
     def create_muf_uri(self, user):
+        """
+        A function combining creating MUF expression function and creating MUFs.
+
+        Parameters
+        ----------
+        self : class
+        user : User class
+
+        Returns
+        -------
+        tuple
+            A tuple with 2 elements. First element captures, whether the an attempt to create MUFs for
+            all elements in the list was successful. If the first argument returns `SUCCESS`, a list
+            with URIs to filter is returned, otherwise an error message is returned.
+
+        Raises
+        ------
+        """
 
         _muf_str = user.muf
         logging.debug(_muf_str)
@@ -520,11 +663,26 @@ class Component(KBCEnvHandler):
             return True, _muf_uri
 
     def map_role_to_uri(self, user):
+        """
+        A function mapping user role to its URI.
+
+        Parameters
+        ----------
+        self : class
+        user : User class
+        """
 
         _role = user.role
         user.role_uri = self._roles_map[_role]['GD_URI']
 
     def run(self):
+        """
+        The main run function
+
+        Parameters
+        ----------
+        self : class
+        """
 
         for f in self.input_files:
 
@@ -585,7 +743,8 @@ class Component(KBCEnvHandler):
 
                     elif user._app_action == 'GD_DISABLE':
 
-                        logging.debug("Attemmpting to disable user %s" % user.login)
+                        logging.debug(
+                            "Attemmpting to disable user %s" % user.login)
 
                         _sc, _js = self.client._GD_remove_user_from_project(
                             user.uri)
@@ -602,7 +761,8 @@ class Component(KBCEnvHandler):
 
                     elif user._app_action == 'GD_DISABLE MUF GD_ENABLE':
 
-                        logging.debug("User %s will be disabled, assigned MUFs and re-enabled." % user.login)
+                        logging.debug(
+                            "User %s will be disabled, assigned MUFs and re-enabled." % user.login)
                         logging.debug("Disabling...")
 
                         _sc, _js = self.client._GD_remove_user_from_project(
@@ -674,7 +834,8 @@ class Component(KBCEnvHandler):
 
                         if user._app_action == 'TRY_KB_CREATE MUF ENABLE_OR_INVITE':
 
-                            logging.info("Attempting to create user %s in organization." % user.login)
+                            logging.info(
+                                "Attempting to create user %s in organization." % user.login)
 
                             _sc, _js = self.client._KBC_create_user(
                                 user.login, user.first_name, user.last_name)
@@ -685,7 +846,8 @@ class Component(KBCEnvHandler):
                                 self.log.make_log(
                                     user.login, "USER_CREATE", True, user.role, user.uri, user.muf)
 
-                                logging.debug("User created successfully. URI: %s" % user.uri)
+                                logging.debug(
+                                    "User created successfully. URI: %s" % user.uri)
 
                             elif _sc == 422:
 
@@ -740,7 +902,8 @@ class Component(KBCEnvHandler):
 
                             logging.debug("Assigning MUFs...")
 
-                            _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
+                            _sc, _js = self.client._GD_assign_MUF(
+                                user.uri, _muf)
 
                             if _sc == 200:
 
@@ -759,7 +922,8 @@ class Component(KBCEnvHandler):
                                 continue
 
                             logging.debug("Enabling user in the project...")
-                            _sc, _js = self.client._KBC_add_user_to_project(user.login, user.role)
+                            _sc, _js = self.client._KBC_add_user_to_project(
+                                user.login, user.role)
 
                             if _sc == 204:
 
@@ -773,7 +937,8 @@ class Component(KBCEnvHandler):
 
                     elif user._app_action == 'MUF KB_ENABLE':
 
-                        logging.debug("User will be assigned MUFs and enabled.")
+                        logging.debug(
+                            "User will be assigned MUFs and enabled.")
                         logging.debug("Creating MUFs...")
 
                         _status, _muf = self.create_muf_uri(user)
@@ -805,7 +970,8 @@ class Component(KBCEnvHandler):
                             continue
 
                         logging.debug("Enabling user in the project...")
-                        _sc, _js = self.client._KBC_add_user_to_project(user.login, user.role)
+                        _sc, _js = self.client._KBC_add_user_to_project(
+                            user.login, user.role)
 
                         if _sc == 204:
 

@@ -12,13 +12,12 @@
     "is_alias": false,
     "attributes": [],
     "columns": [
-        "Type",
-        "Campaign_Name",
-        "Status",
-        "Start_Date",
-        "End_Date",
-        "Location",
-        "Eventbrite_link"
+        "login",
+        "action",
+        "role",
+        "muf",
+        "first_name",
+        "last_name"
     ],
     "metadata": [
         {
@@ -65,12 +64,11 @@
         }
     ],
     "column_metadata": {
-        "Type": [],
-        "Campaign_Name": [],
-        "Status": [],
-        "Start_Date": [],
-        "End_Date": [],
-        "Location": [],
-        "Eventbrite_link": []
+        "login": [],
+        "action": [],
+        "role": [],
+        "muf": [],
+        "first_name": [],
+        "last_name": []
     }
 }

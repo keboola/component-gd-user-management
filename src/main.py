@@ -26,8 +26,7 @@ logger.addHandler(logging_gelf_handler)
 # removes the initial stdout logging
 logger.removeHandler(logger.handlers[0])
 
-# Access the supplied rules
-
+# Key definition
 GD_USERNAME = 'username'
 GD_PASSWORD = '#password'
 GD_PID = 'pid'
@@ -36,8 +35,6 @@ GD_URL = 'gd_url'
 KBC_URL = 'provisioning_url'
 
 MANDATORY_PARS = [GD_USERNAME, GD_PASSWORD, GD_PID, GD_CUSTOM_DOMAIN]
-
-# logging.info("Successfully fetched all parameters.")
 
 if __name__ == '__main__':
 

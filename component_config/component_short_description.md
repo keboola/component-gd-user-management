@@ -1,1 +1,1 @@
-A user management application for GD.
+A GoodData User Management application for managing users and data permissions.

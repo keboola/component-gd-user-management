@@ -5,9 +5,22 @@ import os
 import datetime
 
 
-class componentLogger:
+class Logger:
+
+    """
+    A class used for logging all necessary steps in the MUF process and their status.
+    """
 
     def __init__(self, data_path):
+
+        """
+        An initialization function.
+
+        Parameters
+        ----------
+        data_path : str
+            A data path, where the status file will be used.
+        """
 
         self.data_path = data_path
         self.output_path = os.path.join(data_path, 'out', 'tables', 'status.csv')
@@ -36,6 +49,26 @@ class componentLogger:
 
     def make_log(self, user, action, success, role, details, muf):
 
+        """
+        A function, that writes a row to a status file.
+
+        Parameters
+        ----------
+        self : class
+        user : str
+            A user, for which the action was performed.
+        action : str
+            Name of the action performed.
+        success : bool
+            Boolean value whether the action was successful.
+        role : str
+            Role of the user.
+        details : str
+            Any additional details about the action.
+        muf : str
+            A muf expression used for the user.
+        """
+
         _ts = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
         if success:
             success_str = "SUCCESS"
@@ -62,6 +95,14 @@ class componentLogger:
             writer.writerow(_to_write)
 
     def create_manifest(self):
+
+        """
+        A function creating manifest for the status file.
+
+        Parameters
+        ----------
+        self : class
+        """
 
         _out_path = self.output_path
         _manifest_path = _out_path + '.manifest'
