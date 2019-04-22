@@ -19,7 +19,7 @@
 			"type": "string",
 			"format": "password",
 			"title": "GD Password",
-			"description": "Password to admin login to GD portal.",
+			"description": "Password to admin login to GoodData portal.",
 			"propertyOrder": 200
 		},
 		"pid": {
@@ -31,7 +31,7 @@
 		"domain_custom": {
 			"type": "string",
 			"title": "GD Custom Domain",
-			"description": "If the GD project is white labeled, provide the domain. Format: https://subdomain.domain.com",
+			"description": "If the GoodData project is white labeled, provide the domain. Format: \"https://subdomain.domain.com\".",
 			"default": "",
 			"propertyOrder": 600
 		}
