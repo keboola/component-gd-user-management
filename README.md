@@ -184,11 +184,11 @@ and
 []
 ```
 
-##### `first_name`
+##### first_name
 
 First name of the user. The name will be used if the user must be created in the Keboola domain.
 
-##### `last_name`
+##### last_name
 
 Last name of the user. The usage is same as `first_name`.
 
