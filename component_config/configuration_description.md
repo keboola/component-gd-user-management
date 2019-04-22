@@ -6,7 +6,7 @@ The application accepts 4 parameters and a table of users. In addition to the 4 
 
 Following 4 parameters are accepted: `GD Login`, `GD Password`, `GD Project ID` and `GD Custom Domain`. More detailed description of all parameters is provided in the upcoming subsections.
 
-#### `GD Login`
+#### GD Login
 
 The login email to the GoodData portal. Requirements for the used login are:
 
@@ -16,17 +16,17 @@ The login email to the GoodData portal. Requirements for the used login are:
 
 Failure to comply with any of the above requirements will raise an error.
 
-#### `GD Password`
+#### GD Password
 
 The password to `GD Login` used to log in to GoodData portal.
 
-#### `GD Project ID`
+#### GD Project ID
 
 The ID of a project, for which the changes are to be made. The ID is compared to a list of available project IDs in the Keboola project. If the GD PID is not in the list of available PIDs, i.e. the writer is not located in the same project as the application, an error is raised. This behavior is enforced by the application to prevent somebody changing users across projects without knowing about it.
 
 Follow [the link](https://help.gooddata.com/display/doc/Find+the+Project+ID) to get more information on how to find your project ID.
 
-#### `GD Custom Domain`
+#### GD Custom Domain
 
 In case, the destination GoodData project is white labelled, it is required to provide the white label domain in the following format: `https://subdomain.domain.com` or whatever the equivalent is. This domain will be used for all GoodData related API calls,
 hence the incorrect format or domain will result in application failure.
@@ -36,11 +36,11 @@ If the GoodData project is not white labeled, the field should be left blank and
 
 The user table **must** contain following columns: `login`, `action`, `role`, `muf`, `first_name` and `last_name`. If any of the column is missing, the application will fail. Below is the detailed description of each column.
 
-#### `login`
+#### login
 
 The email of the user, for whom the action is to be executed. If the user does not exist in the organization, an attempt will be made to register the user under Keboola organization with this email.
 
-#### `action`
+#### action
 
 The action, which is to be done for the user. Must be one of the following: `DISABLE`, `ENABLE` or `INVITE`.
 
@@ -62,11 +62,11 @@ If the **user** is **already in the project**, no invite is generated. Standard 
 
 If the **user** is **not in the project**, an invite is generated for the user. The invite is sent to user's `login` mail and the user is assigned data permissions prior to invite being sent out.
 
-#### `role`
+#### role
 
 Role of the user to be had in the project. Must be one of `admin`, `editor`, `readOnly`, `dashboardOnly`, `keboolaEditorPlus`. If a role is not assigned properly, the error is recorded in the status file.
 
-#### `muf`
+#### muf
 
 A list of json-like objects, from which data permissions are created. An example list might have the following form:
 
@@ -126,10 +126,10 @@ which will then be parsed as
 ]
 ```
 
-##### `first_name`
+##### first_name
 
 First name of the user. The name will be used if the user must be created in the Keboola domain.
 
-##### `last_name`
+##### last_name
 
 Last name of the user. The usage is same as `first_name`.
