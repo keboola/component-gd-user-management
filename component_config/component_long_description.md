@@ -32,7 +32,7 @@ Below is the more detailed description of the process.
 5. The following action occurs once the user filter was created (follow-up to point 2):
    1. User is assigned the user filter and is re-enabled in the project.
    2. User is assigned the user filter and is added to the project.
-   3. User is assigned the user fitler and is re-enabled to the project.
+   3. User is assigned the user fitler and is re-enabled in the project.
    4. User is assigned the user filter and is enabled/invited to the project.
 6. Process ends.
 

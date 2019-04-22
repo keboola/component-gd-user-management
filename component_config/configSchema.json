@@ -25,13 +25,13 @@
 		"pid": {
 			"type": "string",
 			"title": "GD Prooject ID",
-			"description": "GD Project ID",
+			"description": "GoodData project ID. See description for more info.",
 			"propertyOrder": 300
 		},
 		"domain_custom": {
 			"type": "string",
 			"title": "GD Custom Domain",
-			"description": "If your GD project is whitelabeled, provide the domain. Format: https://subdomain.domain.com",
+			"description": "If the GD project is white labeled, provide the domain. Format: https://subdomain.domain.com",
 			"default": "",
 			"propertyOrder": 600
 		}

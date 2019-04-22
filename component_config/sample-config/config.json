@@ -1,19 +1,4 @@
 {
-  "storage": {
-    "input": {
-      "files": [],
-      "tables": [
-        {
-          "destination": "users.csv",
-          "source": "in.c-test.users"
-        }
-      ]
-    },
-    "output": {
-      "files": [],
-      "tables": []
-    }
-  },
   "parameters": {
     "username": "admin_user@domain.com",
     "#password": "notPSWD1234",
