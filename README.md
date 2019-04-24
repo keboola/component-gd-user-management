@@ -27,28 +27,28 @@ Below is a more detailed description of the process.
 
 1. User and all their data is read from the table.
 2. User's login is compared to the list of users in GD project and list of users provisioned by Keboola.
-   1. If the user is in both organization and project, they are disabled.
-   2. If the user is in the organization but not in the project, nothing is done.
-   3. If the user is not in the organization but is in the project, they are disabled.
-   4. If the user is not in the organization nor the project, an attempt is made to create them in Keboola organization. If the attemp fails, the user is already part of another organization and will not be maintained in Keboola domain.
+    1. If the user is in both organization and project, they are disabled.
+    2. If the user is in the organization but not in the project, nothing is done.
+    3. If the user is not in the organization but is in the project, they are disabled.
+    4. If the user is not in the organization nor the project, an attempt is made to create them in Keboola organization. If the       attemp fails, the user is already part of another organization and will not be maintained in Keboola domain.
 3. For each user, their `Mandatory User Filter (MUF)` expression is read and parsed into URI format. The URI format is a format, where all attribute names, labels and values are transformed to their URI counterparts. If the attribute, label or value does not exist, the URI expression is not created and an error is recorded in the status file.
 4. The URI expression is posted to GoodData and the user filter is created. Each user filter is assigned unique ID, which is then passed on to users as an attribute.
 5. The following action occurs once the user filter was created (follow-up to point 2):
-   1. User is assigned the user filter and is re-enabled in the project.
-   2. User is assigned the user filter and is added to the project.
-   3. User is assigned the user fitler and is re-enabled in the project.
-   4. User is assigned the user filter and is enabled/invited to the project.
+    1. User is assigned the user filter and is re-enabled in the project.
+    2. User is assigned the user filter and is added to the project.
+    3. User is assigned the user fitler and is re-enabled in the project.
+    4. User is assigned the user filter and is enabled/invited to the project.
 6. Process ends.
 
 ## 2 Input mapping
 
-The application accepts 4 parameters and a table of users. In addition to the 4 parameters, the component automatically uses [Storage API Token](https://help.keboola.com/management/project/tokens/) to access available GoodData projects within the project and provision users. A sample configuration can be found [in the repository](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/?at=master).
+The application accepts 4 parameters and a table of users. In addition to the 4 parameters, the component automatically uses [Storage API Token](https://help.keboola.com/management/project/tokens/) to access available GoodData projects within the project and provision users. A sample configuration can be found [in the repository](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/).
 
 ### 2.1 Parameters
 
 Following 4 parameters are accepted: `GD Login`, `GD Password`, `GD Project ID` and `GD Custom Domain`. More detailed description of all parameters is provided in the upcoming subsections.
 
-A sample of the configuration file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/config.json?at=master&fileviewer=file-view-default).
+A sample of the configuration file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/config.json).
 
 #### 2.1.1 GD Login
 
@@ -59,6 +59,8 @@ The login email to the GoodData portal. Requirements for the used login are:
 * must not have any data permissions assigned to them.
 
 Failure to comply with any of the above requirements will raise an error.
+
+You can either use an already existing login (e.g. a personal account with admin privileges) or you can use Keboola's GoodData Provisioning API to [create a new login](https://keboolagooddataprovisioning.docs.apiary.io/#reference/0/kbc-access/get-user-credentials-to-project) and use those credentials.
 
 #### 2.1.2 GD Password
 
@@ -78,7 +80,7 @@ If the GoodData project is not white labeled, the field should be left blank and
 
 ### 2.2 User table
 
-The user table **must** contain following columns: `login`, `action`, `role`, `muf`, `first_name` and `last_name`. If any of the columns is missing, the application will fail. Sample of the table can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/in/tables/test.csv?at=master&fileviewer=file-view-default).
+The user table **must** contain following columns: `login`, `action`, `role`, `muf`, `first_name` and `last_name`. If any of the columns is missing, the application will fail. Sample of the table can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/in/tables/test.csv).
 
 Below is the detailed description of each column.
 
@@ -194,7 +196,7 @@ Last name of the user. The usage is same as `first_name`.
 
 ## 3 Output mapping
 
-The output of the application is the status file, which is loaded incrementally to `out.c-GDUserManagement.status` table automatically. Sample of the status file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/out/tables/test.csv?at=master&fileviewer=file-view-default).
+The output of the application is the status file, which is loaded incrementally to `out.c-GDUserManagement.status` table automatically. Sample of the status file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/out/tables/test.csv).
 
 The file contains following columns:
 
