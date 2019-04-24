@@ -76,7 +76,7 @@ Follow [the link](https://help.gooddata.com/display/doc/Find+the+Project+ID) to 
 
 In case, the destination GoodData project is white labelled, it is required to provide the white label domain in the following format: `https://subdomain.domain.com` or whatever the equivalent is. This domain will be used for all GoodData related API calls,
 hence the incorrect format or domain will result in application failure.
-If the GoodData project is not white labeled, the field should be left blank and the component will use the base URL based on project location (`keboola.eu.gooddata.com` for EU location, `secure.gooddata.com` for US location).
+If the GoodData project is not white labeled, the field should be left blank and the component will use the base URL based on project location (`https://keboola.eu.gooddata.com` for EU location, `https://secure.gooddata.com` for US location).
 
 ### 2.2 User table
 
