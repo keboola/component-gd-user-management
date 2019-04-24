@@ -1,12 +1,12 @@
 ## Input mapping
 
-The application accepts 4 parameters and a table of users. In addition to the 4 parameters, the component automatically uses [Storage API Token](https://help.keboola.com/management/project/tokens/) to access available GoodData projects within the project and provision users. A sample configuration can be found [in the repository](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/?at=master).
+The application accepts 4 parameters and a table of users. In addition to the 4 parameters, the component automatically uses [Storage API Token](https://help.keboola.com/management/project/tokens/) to access available GoodData projects within the project and provision users. A sample configuration can be found [in the repository](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/).
 
 ### 1 Parameters
 
 Following 4 parameters are accepted: `GD Login`, `GD Password`, `GD Project ID` and `GD Custom Domain`. More detailed description of all parameters is provided in the upcoming subsections.
 
-A sample of the configuration file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/config.json?at=master&fileviewer=file-view-default).
+A sample of the configuration file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/config.json).
 
 #### 1.1 GD Login
 
@@ -36,7 +36,7 @@ If the GoodData project is not white labeled, the field should be left blank and
 
 ### 2 User table
 
-The user table **must** contain following columns: `login`, `action`, `role`, `muf`, `first_name` and `last_name`. If any of the columns is missing, the application will fail. Sample of the table can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/in/tables/test.csv?at=master&fileviewer=file-view-default).
+The user table **must** contain following columns: `login`, `action`, `role`, `muf`, `first_name` and `last_name`. If any of the columns is missing, the application will fail. Sample of the table can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/in/tables/test.csv).
 
 Below is the detailed description of each column.
 
@@ -152,7 +152,7 @@ Last name of the user. The usage is same as `first_name`.
 
 ## 3 Output mapping
 
-The output of the application is the status file, which is loaded incrementally to `out.c-GDUserManagement.status` table automatically. Sample of the status file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/4ec16093a0bbd39c2d4784d19eee17776ae6f968/component_config/sample-config/out/tables/test.csv?at=master&fileviewer=file-view-default).
+The output of the application is the status file, which is loaded incrementally to `out.c-GDUserManagement.status` table automatically. Sample of the status file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/out/tables/test.csv).
 
 The file contains following columns:
 
