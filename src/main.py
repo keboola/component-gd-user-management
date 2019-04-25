@@ -34,7 +34,7 @@ GD_CUSTOM_DOMAIN = 'domain_custom'
 GD_URL = 'gd_url'
 KBC_URL = 'provisioning_url'
 
-APP_VERSION = '0.1.0'
+APP_VERSION = '0.1.2'
 
 MANDATORY_PARS = [GD_USERNAME, GD_PASSWORD, GD_PID, GD_CUSTOM_DOMAIN]
 
