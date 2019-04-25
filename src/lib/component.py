@@ -980,7 +980,7 @@ class Component(KBCEnvHandler):
 
                         else:
 
-                            self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
                                               user.role, _js, user.muf)
 
                     logging.info("Process for user %s has ended." % user.login)
