@@ -112,7 +112,7 @@ If the **user** is **not in the project**, an invite is generated for the user. 
 
 #### 2.2.3 role
 
-Role of the user to be had in the project. Must be one of `admin`, `editor`, `readOnly`, `dashboardOnly`, `keboolaEditorPlus`. If a role is not assigned properly, the error is recorded in the status file.
+Role of the user to be had in the project. Must be one of `admin`, `dashboardOnly`, `editor`, `editorInvite`, `editorUserAdmin`, `explorer`, `explorerOnly`, `keboolaEditorPlus`, `readOnlyUser` or `readOnlyNoExport`. If a role is not assigned properly, the error is recorded in the status file.
 
 #### 2.2.4 muf
 

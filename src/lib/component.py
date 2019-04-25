@@ -180,16 +180,26 @@ class Component(KBCEnvHandler):
         _GD_roles = self.client._GD_get_roles()
 
         _KB_roles = ['admin',
-                     'editor',
-                     'readOnly',
                      'dashboardOnly',
-                     'keboolaEditorPlus']
+                     'editor',
+                     'editorInvite',
+                     'editorUserAdmin',
+                     'explorer',
+                     'explorerOnly',
+                     'keboolaEditorPlus',
+                     'readOnlyUser',
+                     'readOnlyNoExport']
 
         _role_map = {'admin': 'adminRole',
                      'dashboardOnly': 'dashboardOnlyRole',
-                     'readOnly': 'readOnlyUserRole',
                      'editor': 'editorRole',
-                     'keboolaEditorPlus': 'keboolaEditorPlusRole'}
+                     'editorInvite': 'editorInviteRole',
+                     'editorUserAdmin': 'editorUserAdminRole',
+                     'explorer': 'explorerRole',
+                     'explorerOnly': 'explorerOnlyRole',
+                     'keboolaEditorPlus': 'keboolaEditorPlusRole',
+                     'readOnlyUser': 'readOnlyUserRole',
+                     'readOnlyNoExport': 'readOnlyNoExportRole'}
 
         _role_matrix = {}
 
