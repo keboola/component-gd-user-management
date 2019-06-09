@@ -130,9 +130,20 @@ class Component(KBCEnvHandler):
 
         for u in _GD_users:
 
+            logging.debug(u)
+
             _email = u['user']['content']['email']
             _user_uri = u['user']['links']['self']
-            _role_uri = u['user']['content']['userRoles'][0]
+            _role = u['user']['content']['userRoles']
+
+            if _role != []:
+
+                _role_uri = _role[0]
+
+            else:
+
+                _role_uri = ''
+
             _status = u['user']['content']['status']
 
             _GD_users_out[_email] = {'email': _email,
