@@ -1,3 +1,7 @@
+##### Note
+
+A more detailed documentation is available in [component's repository](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/README.md).
+
 ## Input mapping
 
 The application accepts 4 parameters and a table of users. In addition to the 4 parameters, the component automatically uses [Storage API Token](https://help.keboola.com/management/project/tokens/) to access available GoodData projects within the project and provision users. A sample configuration can be found [in the repository](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/).
@@ -163,6 +167,8 @@ The file contains following columns:
 * `role` - user role
 * `details` - any additional details related to the action
 * `muf` - muf assigned to the user from the table
+
+See [documentaion](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/README.md) for more detailed information about execution plans and output mapping.
 
 ## 4 See also
 

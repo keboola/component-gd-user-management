@@ -36,6 +36,8 @@ Below is the more detailed description of the process.
    4. User is assigned the user filter and is enabled/invited to the project.
 6. Process ends.
 
+See section **4 Execution plan** in [documentation](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/README.md).
+
 ## See also
 
 The following two API references might be handy when working with the application:

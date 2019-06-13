@@ -208,16 +208,148 @@ The file contains following columns:
 * `details` - any additional details related to the action
 * `muf` - muf assigned to the user from the table
 
-## 4 Development
+### 3.1 user
+
+The user column contains the information about the login, for which the action was performed. For each login, there's a set of actions that are executed in order to make sure that each user is safely added to a project and in case of fail does not have access to information they should not have access to.
+
+### 3.2 action
+
+The column represents the action that is executed. Detailed information about all of the actions can be found in the `details` column. There are currently 4 admin actions, executed at the very beginning of the process and 8 user actions, executed on the user level. In the following subsections, each of the actions will be briefly discussed in order of their usual execution.
+
+#### 3.2.1 `GET_ATTRIBUTES`
+
+An admin action that obtains the list of all attributes in the GoodData project, which is then used to create MUF expressions and MUFs. When a user specified attribute is missing in the list of attributes returned by this action, the MUF fails and user is not enabled in the project.
+
+#### 3.2.2 `GET_GD_USERS` and `GET_KBC_USERS`
+
+Both of these admin actions download a list of users from the GoodData project or its assigned Keboola domain respectively. The list of users is then used when assigning necessary actions to each user (see seciont 3.2.4 `ASSIGN_ACTION`).
+
+#### 3.2.3 `MAP_ROLES`
+
+The admin action creates a map of roles beteen GoodData and Keboola. As the roles can have slightly different names, this action is necessary to assign correct role to users.
+
+#### 3.2.4 `ASSIGN_ACTION`
+
+A user action, which determines the required steps needed for each user. The backbone of the action is comparing a user against the list of users obtained in 3.2.2. Arbitrary actions, such as disabling a user that is not part of the project, are skipped. See section for 4 for detailed execution plan and description of each assigned action.
+
+#### 3.2.5 `USER_CREATE`
+
+A user action performed, when user is not in the GoodData project nor part of the user list in Keboola domain. The action creates a user in the Keboola domain and allows them to be provisioned and managed further using Keboola GoodData Provisioning API.
+
+#### 3.2.6 `DISABLE_IN_PRJ`
+
+A user action that disables a user in the project. The action is only executed, if a user is already present in the project, either in disabled or enabled state.
+
+#### 3.2.7 `CREATE_MUF_EXPR`
+
+An action performed on user level, that converts each of the json MUF objects to be represented by their unique URI identifiers. The action uses output of `GET_ATTRIBUTES` action, obtains the values for attributes used in the json structure and maps accordingly. If the action is successful, the resulting URI representation can be seen in `details` column. If the action fails, the reason is recorded in the `details` column.
+
+#### 3.2.8 `CREATE_MUF`
+
+A user level action, that registers the MUF expression obtained in step 3.2.7, pushes it to GoodData and returns unique URI for the filter. If filter is a list with lenght more than 1 (multiple filters) a list of URIs is returned.
+
+#### 3.2.9 `ASSIGN_MUF`
+
+A user action, which assigns the filters obtained in step 3.2.8 to user. The filters are tied to user's profile in the project.
+
+#### 3.2.10 `INVITE_TO_PRJ`
+
+A user action that invites user to the project and assigns MUF at the same time. The filter is sent together with the invitation and the filter becomes active once the user accepts the invitation. The action is executed only if all the preceeding steps were completed successfully to make sure users do not have access to data, they're not supposed to have.
+
+#### 3.2.11 `ENABLE_IN_PRJ`
+
+A user action, that enables user in the project. The action is executed only if all the preceeding steps were completed successfully to prevent access to data, user should not see.
+
+### 3.3 status
+
+One of `SUCCESS` or `ERROR`. Marks whether the respective action was successful.
+
+### 3.4 timestamp
+
+A time when the action was perfomed. The time is provided in `YYYY-MM-DD HH:MI:SS.F` format and UTC timezone.
+
+### 3.5 role
+
+A role assigned to the user.
+
+### 3.6 details
+
+Additional details available to each action. The value in the column varies from the action performed.
+
+### 3.7 muf
+
+Original MUF expression assigned to the user in the input mapping.
+
+## 4 Execution plan
+
+As was mentioned in section 3.2.4, each user has a unique list of actions which are performed based on his membership in the project or organization. In this section, each of the execution plans from `ASSIGN_ACTION` step will be discussed in detail to provide more clarity.
+
+### 4.1 `GD_DISABLE`
+
+This action performs only one step:
+
+```
+DISABLE_IN_PRJ
+```
+
+and is performed only on users, that should be disabled and are already present in the project. Other users, who are assigned this action but are not members of the project are skipped.
+
+### 4.2 `GD_DISABLE MUF GD_ENABLE`
+
+This action is performed on all of the users, that are already in the project (enabled or disabled state) and should be enabled after the result is finished. The execution plan is following:
+
+```
+DISABLE_IN_PRJ > CREATE_MUF_EXPR > CREATE_MUG > ASSIGN_MUG > ENABLE_IN_PRJ
+```
+
+If any of the steps before the `ENABLE_IN_PRJ` action fails, the user stays in disabled state.
+
+### 4.3 `MUF GD_INVITE`
+
+The action is performed, when users should be invited to the project instead of adding them directly to the project. In this case, an email invitation will be sent and user will have the MUF assigned once he activates his account automatically. There's no need to re-run the component to activate the filter once the user accepts the invitation. The execution plan for the process is following:
+
+```
+CREATE_MUF_EXPR > CREATE_MUF > INVITE_TO_PRJ
+```
+
+and as was mentioned, the invitation contains the MUF so the `ASSIGN_MUF` step is omitted. If any of the intermediary step fail, the invitation is not sent out. It's also important to mention, that invitation is not sent to users, that are already in the project in enabled state.
+
+### 4.4 `MUF KB_ENABLE`
+
+The action happens when user is present in Keboola organization but not a member of the GoodData project. The action uses Keboola endpoint to add user directly to the project. The execution plan is following:
+
+```
+CREATE_MUF_EXPR > CREATE_MUF > ASSIGN_MUF > ENABLE_IN_PRJ
+```
+
+and as is the case with previous action steps, the user is not enabled in the project if any of the preceeding actions fail.
+
+### 4.5 `TRY_KB_CREATE MUF ENABLE_OR_INVITE`
+
+If a user is not a member of the project nor the organization, the component will try to create the user in Keboola organization. However, it might happen that some users are already part of different organization. In that case, the user can't be created in the organization and his unique identifier is not known since he's not part of a project. The only remaining thing is to invite user to the project, which component does automatically with added MUF. If the user is created successfully in Keboola organization, the user will then follow the same process as `MUF KB_ENABLE` action. Therefore, there are two possible execution steps based on whether `USER_CREATE` action succeds or not.
+
+If `USER_CREATE` succeeds, the following execution plan is executed:
+
+```
+USER_CREATE > CREATE_MUF_EXPR > CREATE_MUF > ASSIGN_MUF > ENABLE_IN_PRJ
+```
+
+else the plan below is executed:
+
+```
+USER_CREATE > CREATE_MUF_EXPR > CREATE_MUF > INVITE_TO_PRJ
+```
+
+## 5 Development
 
 To run the image locally, use `docker-compose.yml` to define environment, mainly `KBC_TOKEN`, which is used as storage API token for Keboola Provisioning API. Then run following commands:
 
 ```
 docker-compose build
-docker-compose run -rm dev
+docker-compose run dev
 ```
 
-## 5 See also
+## 6 See also
 
 The following two API references might be handy when working with the application:
 

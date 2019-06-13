@@ -560,7 +560,7 @@ class Component(KBCEnvHandler):
         if _user_action not in ("ENABLE", "DISABLE", "INVITE"):
 
             self.log.make_log(_login, _user_action, False,
-                              user.role, "User action must be ENABLE or DISABLE.", '')
+                              user.role, "User action must be one of ENABLE, DISABLE or INVITE.", '')
             user._app_action = 'SKIP'
 
             return
@@ -760,7 +760,7 @@ class Component(KBCEnvHandler):
                     logging.info("User %s was assigned the following action: %s" % (
                         user.login, user._app_action))
 
-                    self.log.make_log(user.login, "ASSIGNED_ACTION", True,
+                    self.log.make_log(user.login, "ASSIGN_ACTION", True,
                                       user.role, user._app_action, user.muf)
 
                     self.map_role_to_uri(user)

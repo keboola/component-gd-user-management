@@ -69,7 +69,7 @@ class Logger:
             A muf expression used for the user.
         """
 
-        _ts = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+        _ts = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC')
         if success:
             success_str = "SUCCESS"
         else:
