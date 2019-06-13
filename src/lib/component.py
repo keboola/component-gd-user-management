@@ -130,9 +130,10 @@ class Component(KBCEnvHandler):
 
         for u in _GD_users:
 
-            logging.debug(u)
+            # logging.debug(u)
 
             _email = u['user']['content']['email']
+            _email_identifier = _email.lower()
             _user_uri = u['user']['links']['self']
             _role = u['user']['content']['userRoles']
 
@@ -146,13 +147,20 @@ class Component(KBCEnvHandler):
 
             _status = u['user']['content']['status']
 
-            _GD_users_out[_email] = {'email': _email,
-                                     'uri': _user_uri,
-                                     'role': _role_uri,
-                                     'status': _status}
+            _GD_users_out[_email_identifier] = {'email': _email,
+                                                'uri': _user_uri,
+                                                'role': _role_uri,
+                                                'status': _status}
 
         self.log.make_log('admin', 'GET_GD_USERS', True, '', '', '')
         self.users_GD = _GD_users_out
+
+        logging.debug("GoodData users:")
+        logging.debug(_GD_users_out)
+
+        # with open('/data/out/files/users.json', 'w') as file:
+
+        #    json.dump(self.users_GD, file)
 
         _KB_users = self.client._KBC_get_users()
 
@@ -164,10 +172,11 @@ class Component(KBCEnvHandler):
         for u in _KB_users:
 
             _email = u['login']
+            _email_identifier = _email.lower()
             _user_uri = '/gdc/account/profile/' + u['uid']
 
-            _KB_users_out[_email] = {'email': _email,
-                                     'uri': _user_uri}
+            _KB_users_out[_email_identifier] = {'email': _email,
+                                                'uri': _user_uri}
 
         self.log.make_log('admin', 'GET_KBC_USERS', True, '', '', '')
         self.users_KB = _KB_users_out
@@ -718,7 +727,7 @@ class Component(KBCEnvHandler):
 
                     try:
 
-                        _login = row['login']
+                        _login = row['login'].lower()
                         _action = row['action']
                         _role = row['role']
                         _muf = row['muf']
@@ -750,6 +759,9 @@ class Component(KBCEnvHandler):
 
                     logging.info("User %s was assigned the following action: %s" % (
                         user.login, user._app_action))
+
+                    self.log.make_log(user.login, "ASSIGNED_ACTION", True,
+                                      user.role, user._app_action, user.muf)
 
                     self.map_role_to_uri(user)
 

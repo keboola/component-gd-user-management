@@ -187,7 +187,7 @@ class clientGoodDataKeboola:
 
         self._GD_header = _header
 
-        # logging.debug("Request header: %s" % _header)
+        logging.debug("Request header: %s" % _header)
 
     def _GD_get_users(self):
 

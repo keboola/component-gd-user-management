@@ -10,7 +10,7 @@ sys.tracebacklimit = 0
 
 # Logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)-8s : [line:%(lineno)3s] %(message)s',
     datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -34,7 +34,7 @@ GD_CUSTOM_DOMAIN = 'domain_custom'
 GD_URL = 'gd_url'
 KBC_URL = 'provisioning_url'
 
-APP_VERSION = '0.1.3'
+APP_VERSION = '0.1.4'
 
 MANDATORY_PARS = [GD_USERNAME, GD_PASSWORD, GD_PID, GD_CUSTOM_DOMAIN]
 
