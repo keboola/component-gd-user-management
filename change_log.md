@@ -1,3 +1,7 @@
+**0.1.6**
+Fixed error, that was caused when non- latin-1 characters were used.
+Switched strings to be encoded in utf-8
+
 **0.1.0**
 First public version of the application.
 Added README.md

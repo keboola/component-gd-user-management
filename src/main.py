@@ -11,20 +11,22 @@ sys.tracebacklimit = 0
 # Logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)-8s : [line:%(lineno)3s] %(message)s',
+    format='%(asctime)s - %(levelname)-8s - %(filename)s : [line:%(lineno)3s] %(message)s',
     datefmt="%Y-%m-%d %H:%M:%S")
 
 
-logger = logging.getLogger()
-logging_gelf_handler = logging_gelf.handlers.GELFTCPSocketHandler(
-    host=os.getenv('KBC_LOGGER_ADDR'),
-    port=int(os.getenv('KBC_LOGGER_PORT'))
-    )
-logging_gelf_handler.setFormatter(logging_gelf.formatters.GELFFormatter(null_character=True))
-logger.addHandler(logging_gelf_handler)
+if 'KBC_LOGGER_ADDR' in os.environ and 'KBC_LOGGER_PORT' in os.environ:
 
-# removes the initial stdout logging
-logger.removeHandler(logger.handlers[0])
+    logger = logging.getLogger()
+    logging_gelf_handler = logging_gelf.handlers.GELFTCPSocketHandler(
+        host=os.getenv('KBC_LOGGER_ADDR'),
+        port=int(os.getenv('KBC_LOGGER_PORT'))
+        )
+    logging_gelf_handler.setFormatter(logging_gelf.formatters.GELFFormatter(null_character=True))
+    logger.addHandler(logging_gelf_handler)
+
+    # removes the initial stdout logging
+    logger.removeHandler(logger.handlers[0])
 
 # Key definition
 GD_USERNAME = 'username'
@@ -34,7 +36,7 @@ GD_CUSTOM_DOMAIN = 'domain_custom'
 GD_URL = 'gd_url'
 KBC_URL = 'provisioning_url'
 
-APP_VERSION = '0.1.5'
+APP_VERSION = '0.1.6'
 
 MANDATORY_PARS = [GD_USERNAME, GD_PASSWORD, GD_PID, GD_CUSTOM_DOMAIN]
 

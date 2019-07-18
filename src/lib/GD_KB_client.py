@@ -456,7 +456,7 @@ class clientGoodDataKeboola:
 
         logging.debug(_data)
 
-        cu_response = requests.post(url, headers=self._KBC_header, data=_data)
+        cu_response = requests.post(url, headers=self._KBC_header, data=_data.encode('utf-8'))
 
         return self.rsp_splitter(cu_response)
 
