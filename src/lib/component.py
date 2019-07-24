@@ -627,9 +627,9 @@ class Component(KBCEnvHandler):
 
             user.uri = None
 
-            if user.action == 'DISABLE':
+            if _user_action == 'DISABLE':
 
-                user._app_action == 'SKIP'
+                user._app_action = 'SKIP'
 
             else:
 
