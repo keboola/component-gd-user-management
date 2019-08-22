@@ -23,7 +23,7 @@ Below is the more detailed description of the process.
 
 1. User and all their data is read from the table.
 2. User's login is compared to the list of users in GD project and list of users provisioned by Keboola.
-   1. If the user is in both organization and project, they are disabled.
+   1. If the user is in both organization and project, they are disabled or removed.
    2. If the user is in the organization but not in the project, nothing is done.
    3. If the user is not in the organization but is in the project, they are disabled.
    4. If the user is not in the organization nor the project, an attempt is made to create them in Keboola organization is made. If the attemp fails, the user is already part of another organization and will not be maintained in Keboola domain.

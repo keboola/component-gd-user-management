@@ -50,7 +50,7 @@ The email of the user, for whom the action is to be executed. If the user does n
 
 #### 2.2 action
 
-The action, which is to be done for the user. Must be one of the following: `DISABLE`, `ENABLE` or `INVITE`.
+The action, which is to be done for the user. Must be one of the following: `DISABLE`, `ENABLE`, `INVITE` or `REMOVE`.
 
 ##### 2.2.a `DISABLE`
 
@@ -69,6 +69,10 @@ In the special case, that **user** is **not part of the project nor Keboola orga
 If the **user** is **already in the project**, no invite is generated. Standard `DISABLE - MUF - ENABLE` process is followed instead.
 
 If the **user** is **not in the project**, an invite is generated for the user. The invite is sent to user's `login` mail and the user is assigned data permissions prior to invite being sent out.
+
+##### 2.2.2.d `REMOVE`
+
+If the **user** is in the project, in disabled or enabled state, and their email address is not identical to `GD login` parameter, the user is removed using process `GD_REMOVE`. If the **user** is in the project and their login is identical to `GD login` parameter, or they are not present in the project, `SKIP_NO_REMOVE` or `SKIP` process is used, respectively.
 
 #### 2.3 role
 
