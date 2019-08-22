@@ -1007,6 +1007,9 @@ class Component(KBCEnvHandler):
                                 self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
                                                   user.role, _js, user.muf)
 
+                                logging.warn(
+                                    "There were some errors for user %s." % _login)
+
                     elif user._app_action == 'MUF KB_ENABLE':
 
                         logging.debug(
