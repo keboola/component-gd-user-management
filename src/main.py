@@ -36,7 +36,7 @@ GD_CUSTOM_DOMAIN = 'domain_custom'
 GD_URL = 'gd_url'
 KBC_URL = 'provisioning_url'
 
-APP_VERSION = '0.1.7'
+APP_VERSION = '0.2.0'
 
 MANDATORY_PARS = [GD_USERNAME, GD_PASSWORD, GD_PID, GD_CUSTOM_DOMAIN]
 
@@ -53,3 +53,5 @@ if __name__ == '__main__':
                      MANDATORY_PARS)
 
     mngr.run()
+
+    logging.info("User management finished!")

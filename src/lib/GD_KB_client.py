@@ -627,10 +627,10 @@ class clientGoodDataKeboola:
 
         return self.rsp_splitter(au_response)
 
-    def _GD_remove_user_from_project(self, user_uri):
+    def _GD_disable_user_in_project(self, user_uri):
 
         """
-        A function to remove users from project using GD API.
+        A function to disable users in a project using GD API.
 
         Parameters
         ----------
@@ -846,3 +846,30 @@ class clientGoodDataKeboola:
         uf_rsp = requests.get(url, headers=self._GD_header, params=_params)
 
         return self.rsp_splitter(uf_rsp)
+
+    def _GD_remove_user_from_project(self, user_uri):
+
+        """
+        A function removes a user completely from the project. The user has to
+        be invited back to the project, in order to regain access.
+
+        Parameters
+        ----------
+        self : class
+        user_uri : str
+            An URI of the user, which should be deleted.
+
+        Returns
+        -------
+        tuple
+            See rsp_splitter.
+        """
+
+        _user_uid = user_uri.split('/')[-1]
+
+        url = self.gd_url + f'/gdc/projects/{self.pid}/users/{_user_uid}'
+        self._GD_build_header()
+
+        du_rsp = requests.delete(url, headers=self._GD_header)
+
+        return self.rsp_splitter(du_rsp)

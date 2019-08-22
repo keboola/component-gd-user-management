@@ -90,7 +90,7 @@ The email of the user, for whom the action is to be executed. If the user does n
 
 #### 2.2.2 action
 
-The action, which is to be done for the user. Must be one of the following: `DISABLE`, `ENABLE` or `INVITE`.
+The action, which is to be done for the user. Must be one of the following: `DISABLE`, `ENABLE`, `INVITE` or `REMOVE`.
 
 ##### 2.2.2.a `DISABLE`
 
@@ -109,6 +109,10 @@ In the special case, that **user** is **not part of the project nor Keboola orga
 If the **user** is **already in the project**, no invite is generated. Standard `DISABLE - MUF - ENABLE` process is followed instead.
 
 If the **user** is **not in the project**, an invite is generated for the user. The invite is sent to user's `login` mail and the user is assigned data permissions prior to invite being sent out.
+
+##### 2.2.2.d `REMOVE`
+
+If the **user** is in the project, in disabled or enabled state, and their email address is not identical to `GD login` parameter, the user is removed using process `GD_REMOVE`. If the **user** is in the project and their login is identical to `GD login` parameter, or they are not present in the project, `SKIP_NO_REMOVE` or `SKIP` process is used, respectively.
 
 #### 2.2.3 role
 
@@ -260,6 +264,10 @@ A user action that invites user to the project and assigns MUF at the same time.
 
 A user action, that enables user in the project. The action is executed only if all the preceeding steps were completed successfully to prevent access to data, user should not see.
 
+#### 3.2.12 `REMOVE_FROM_PRJ`
+
+A user action, that removes a user from the project. The action is executed straight away with no preceeding steps.
+
 ### 3.3 status
 
 One of `SUCCESS` or `ERROR`. Marks whether the respective action was successful.
@@ -294,7 +302,17 @@ DISABLE_IN_PRJ
 
 and is performed only on users, that should be disabled and are already present in the project. Other users, who are assigned this action but are not members of the project are skipped.
 
-### 4.2 `GD_DISABLE MUF GD_ENABLE`
+### 4.2 `GD_REMOVE`
+
+This action only performs one step:
+
+```
+REMOVE_FROM_PRJ
+```
+
+and removes user completely from the project. No data filters or role changes are applied.
+
+### 4.3 `GD_DISABLE MUF GD_ENABLE`
 
 This action is performed on all of the users, that are already in the project (enabled or disabled state) and should be enabled after the result is finished. The execution plan is following:
 
@@ -304,7 +322,7 @@ DISABLE_IN_PRJ > CREATE_MUF_EXPR > CREATE_MUG > ASSIGN_MUG > ENABLE_IN_PRJ
 
 If any of the steps before the `ENABLE_IN_PRJ` action fails, the user stays in disabled state.
 
-### 4.3 `MUF GD_INVITE`
+### 4.4 `MUF GD_INVITE`
 
 The action is performed, when users should be invited to the project instead of adding them directly to the project. In this case, an email invitation will be sent and user will have the MUF assigned once he activates his account automatically. There's no need to re-run the component to activate the filter once the user accepts the invitation. The execution plan for the process is following:
 
@@ -314,7 +332,7 @@ CREATE_MUF_EXPR > CREATE_MUF > INVITE_TO_PRJ
 
 and as was mentioned, the invitation contains the MUF so the `ASSIGN_MUF` step is omitted. If any of the intermediary step fail, the invitation is not sent out. It's also important to mention, that invitation is not sent to users, that are already in the project in enabled state.
 
-### 4.4 `MUF KB_ENABLE`
+### 4.5 `MUF KB_ENABLE`
 
 The action happens when user is present in Keboola organization but not a member of the GoodData project. The action uses Keboola endpoint to add user directly to the project. The execution plan is following:
 
@@ -324,7 +342,7 @@ CREATE_MUF_EXPR > CREATE_MUF > ASSIGN_MUF > ENABLE_IN_PRJ
 
 and as is the case with previous action steps, the user is not enabled in the project if any of the preceeding actions fail.
 
-### 4.5 `TRY_KB_CREATE MUF ENABLE_OR_INVITE`
+### 4.6 `TRY_KB_CREATE MUF ENABLE_OR_INVITE`
 
 If a user is not a member of the project nor the organization, the component will try to create the user in Keboola organization. However, it might happen that some users are already part of different organization. In that case, the user can't be created in the organization and his unique identifier is not known since he's not part of a project. The only remaining thing is to invite user to the project, which component does automatically with added MUF. If the user is created successfully in Keboola organization, the user will then follow the same process as `MUF KB_ENABLE` action. Therefore, there are two possible execution steps based on whether `USER_CREATE` action succeds or not.
 
@@ -346,7 +364,7 @@ To run the image locally, use `docker-compose.yml` to define environment, mainly
 
 ```
 docker-compose build
-docker-compose run dev
+docker-compose run --rm dev
 ```
 
 ## 6 See also

@@ -8,10 +8,7 @@ services:
         - ./data:/data
     environment:
       - KBC_DATADIR=./data
-      - KBC_TOKEN=XXXX-XXXXXXXXXXXXXXXXXXXX
-    command: 
-      - /bin/sh
-      - /code/scripts/run.sh
+      - KBC_TOKEN=XXXXXX-XXXXXXXXXXXXX
   test:
     # Use to run flake8 and unittests checks
     build: .

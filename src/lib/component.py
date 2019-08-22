@@ -557,10 +557,10 @@ class Component(KBCEnvHandler):
         _login = user.login
         _user_action = user.action
 
-        if _user_action not in ("ENABLE", "DISABLE", "INVITE"):
+        if _user_action not in ("ENABLE", "DISABLE", "INVITE", "REMOVE"):
 
             self.log.make_log(_login, _user_action, False,
-                              user.role, "User action must be one of ENABLE, DISABLE or INVITE.", '')
+                              user.role, "User action must be one of ENABLE, DISABLE, INVITE or REMOVE.", '')
             user._app_action = 'SKIP'
 
             return
@@ -597,9 +597,17 @@ class Component(KBCEnvHandler):
 
                 user._app_action = 'MUF GD_INVITE'
 
+            elif _user_action == 'REMOVE' and _login == self.client.username:
+
+                user._app_action = 'SKIP_NO_REMOVE'
+
+            elif _user_action == 'REMOVE' and _login != self.client.username:
+
+                user._app_action = 'GD_REMOVE'
+
             else:
 
-                logging.error("Unknown error during URI check.")
+                logging.error("Unknown error during membership check.")
                 sys.exit(2)
 
         elif _in_prj is False and _in_org is True:
@@ -618,16 +626,20 @@ class Component(KBCEnvHandler):
 
                 user._app_action = 'MUF GD_INVITE'
 
+            elif _user_action == 'REMOVE':
+
+                user._app_action = 'SKIP'
+
             else:
 
-                logging.error("Unknown error during URI check.")
+                logging.error("Unknown error during membership check.")
                 sys.exit(2)
 
         elif _in_prj is False and _in_org is False:
 
             user.uri = None
 
-            if _user_action == 'DISABLE':
+            if _user_action in ('DISABLE', 'REMOVE'):
 
                 user._app_action = 'SKIP'
 
@@ -774,12 +786,39 @@ class Component(KBCEnvHandler):
 
                         continue
 
+                    elif user._app_action == 'SKIP_NO_REMOVE':
+
+                        logging.warn(
+                            "Can't remove the user specified in the login section. The user %s will be skipped!"
+                            % _login)
+                        self.log.make_log(user.login, "REMOVE_FROM_PRJ", False,
+                                          user.role, "Cannot remove the user used to login. Please, "
+                                          + "change the username in parameters.", '')
+
+                    elif user._app_action == 'GD_REMOVE':
+
+                        logging.debug(
+                            "Attempting to remove user %s." % user.login)
+
+                        _sc, _js = self.client._GD_remove_user_from_project(
+                            user.uri)
+
+                        if _sc == 200:
+
+                            self.log.make_log(user.login, "REMOVE_FROM_PRJ", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "REMOVE_FROM_PRJ", False,
+                                              user.role, '', user.muf)
+
                     elif user._app_action == 'GD_DISABLE':
 
                         logging.debug(
                             "Attemmpting to disable user %s" % user.login)
 
-                        _sc, _js = self.client._GD_remove_user_from_project(
+                        _sc, _js = self.client._GD_disable_user_in_project(
                             user.uri)
 
                         if _sc == 200:
@@ -798,7 +837,7 @@ class Component(KBCEnvHandler):
                             "User %s will be disabled, assigned MUFs and re-enabled." % user.login)
                         logging.debug("Disabling...")
 
-                        _sc, _js = self.client._GD_remove_user_from_project(
+                        _sc, _js = self.client._GD_disable_user_in_project(
                             user.uri)
 
                         if _sc == 200:
