@@ -897,7 +897,7 @@ class Component(KBCEnvHandler):
 
                         else:
 
-                            self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
                                               user.role, _failed[0]['message'], user.muf)
                             logging.warn(
                                 "There were some errors for user %s." % _login)
@@ -1004,7 +1004,7 @@ class Component(KBCEnvHandler):
 
                             else:
 
-                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
                                                   user.role, _js, user.muf)
 
                     elif user._app_action == 'MUF KB_ENABLE':
