@@ -1,4 +1,5 @@
 import json
+import re
 import requests
 import logging
 import sys
@@ -405,22 +406,43 @@ class clientGoodDataKeboola:
         """
 
         url = self.kbc_url + '/users'
+        params = {}
+        complete = False
+        paginationToken = None
+        allUsers = []
 
-        usr_response = requests.get(url, headers=self._KBC_header)
+        while complete is not True:
 
-        usr_sc, usr_json = self.rsp_splitter(usr_response)
+            if paginationToken is not None:
 
-        if usr_sc in (200, 201, 202):
+                params['nextPageToken'] = paginationToken
 
-            return usr_json
+            usr_response = requests.get(url, headers=self._KBC_header, params=params)
+            paginationUrl = usr_response.headers['Link']
 
-        else:
+            if paginationUrl == '':
 
-            logging.error(
-                "Could not obtain provisioned users for the project.")
-            logging.error("Status code received %s." % usr_sc)
-            logging.error("Response: %s" % json.dumps(usr_json))
-            sys.exit(1)
+                complete = True
+
+            else:
+
+                paginationToken = re.findall(r'nextPageToken=.*;', paginationUrl)[0].replace('nextPageToken=', '')
+
+            usr_sc, usr_json = self.rsp_splitter(usr_response)
+
+            if usr_sc in (200, 201, 202):
+
+                allUsers += usr_json
+
+            else:
+
+                logging.error(
+                    "Could not obtain provisioned users for the project.")
+                logging.error("Status code received %s." % usr_sc)
+                logging.error("Response: %s" % json.dumps(usr_json))
+                sys.exit(1)
+
+        return allUsers
 
     def _KBC_create_user(self, login, first_name, last_name):
 
