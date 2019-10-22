@@ -3,14 +3,14 @@ import os
 import sys
 import logging_gelf.handlers
 import logging_gelf.formatters
-from lib.component import Component
+from gooddata.component import UserManagementComponent
 
 # Environment setup
-sys.tracebacklimit = 0
+sys.tracebacklimit = 3
 
 # Logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(levelname)-8s - %(filename)s : [line:%(lineno)3s] %(message)s',
     datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -36,22 +36,12 @@ GD_CUSTOM_DOMAIN = 'domain_custom'
 GD_URL = 'gd_url'
 KBC_URL = 'provisioning_url'
 
-APP_VERSION = '0.2.2'
+APP_VERSION = '0.3.0dev'
 
 MANDATORY_PARS = [GD_USERNAME, GD_PASSWORD, GD_PID, GD_CUSTOM_DOMAIN]
 
 if __name__ == '__main__':
 
     logging.info("Running app version %s..." % APP_VERSION)
-
-    mngr = Component(GD_USERNAME,
-                     GD_PASSWORD,
-                     GD_PID,
-                     GD_CUSTOM_DOMAIN,
-                     GD_URL,
-                     KBC_URL,
-                     MANDATORY_PARS)
-
-    mngr.run()
-
+    mngr = UserManagementComponent()
     logging.info("User management finished!")

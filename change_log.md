@@ -1,3 +1,6 @@
+**0.2.2**
+Fixed a pagination of users, when downloading data from KBC Provisioning API
+
 **0.2.1**
 Fixed bug, that recorded errors when enabling users as successful
 
