@@ -955,20 +955,32 @@ class Component(KBCEnvHandler):
                             _sc, _js = self.client._GD_invite_users_to_project(
                                 _dict)
 
-                            _d_mismatch = _js['createdInvitations']['loginsDomainMismatch']
-                            _d_inproject = _js['createdInvitations']['loginsAlreadyInProject']
+                            if _sc == 200:
 
-                            if len(_d_mismatch) == 0 and len(_d_inproject) == 0:
+                                _d_mismatch = _js['createdInvitations']['loginsDomainMismatch']
+                                _d_inproject = _js['createdInvitations']['loginsAlreadyInProject']
 
-                                self.log.make_log(user.login, "INVITE_TO_PRJ", True,
-                                                  user.role, '', user.muf)
+                                if len(_d_mismatch) == 0 and len(_d_inproject) == 0:
+
+                                    self.log.make_log(user.login, "INVITE_TO_PRJ", True,
+                                                      user.role, '', user.muf)
+
+                                else:
+
+                                    logging.warn(
+                                        "There were some errors when inviting user %s." % _login)
+                                    self.log.make_log(user.login, "INVITE_TO_PRJ", False,
+                                                      user.role, _js, user.muf)
 
                             else:
 
-                                logging.warn(
+                                logging.warning(
                                     "There were some errors when inviting user %s." % _login)
-                                self.log.make_log(user.login, "INVITE_TO_PRJ", False,
-                                                  user.role, _js, user.muf)
+                                self.log.make_log(
+                                    user.login, "INVITE_TO_PRJ", False, user.role,
+                                    "Error when creating invitations, please check the email address. Response: " +
+                                    str(_js),
+                                    user.muf)
 
                         else:
 
