@@ -534,7 +534,15 @@ class Component(KBCEnvHandler):
 
             else:
 
-                return False, "Could not create MUF. Received: %s" % mf_json['error']['message']
+                # logging.debug("MUF:")
+                # logging.debug(mf)
+
+                logging.debug("Status response:")
+                logging.debug(mf_sc)
+
+                logging.debug("JSON response:")
+                logging.debug(mf_json)
+                return False, "Could not create MUF. Received: %s" % mf_json
 
         return True, _muf_ids
 
