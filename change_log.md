@@ -1,3 +1,10 @@
+**0.2.5**
+Added ability to provision the GD project from other Keboola project than the source Keboola project.
+Managed by using two additional parameters `external_project` and `#external_project_token`. Only configurable via API.
+
+**0.2.4**
+Fixed bug, which resulted in application fail when invitations were not created.
+
 **0.2.1**
 Fixed bug, that recorded errors when enabling users as successful
 

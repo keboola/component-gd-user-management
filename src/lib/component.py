@@ -8,6 +8,9 @@ from lib.logger import Logger
 from lib.user import User
 from kbc.env_handler import KBCEnvHandler
 
+KEY_EXTERNAL_PROJECT = 'external_project'
+KEY_EXTERNAL_PROJECT_TOKEN = '#external_project_token'
+
 
 class Component(KBCEnvHandler):
 
@@ -53,6 +56,12 @@ class Component(KBCEnvHandler):
         domain = self.cfg_params[domain_key]
         gd_url = self.image_params[gd_url_key]
         kbc_prov_url = self.image_params[kbc_prov_key]
+
+        external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
+        external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
+
+        if external_project is True:
+            sapi_token = external_project_token
 
         self.client = clientGoodDataKeboola(username, password, pid, domain,
                                             gd_url, kbc_prov_url, sapi_token)
