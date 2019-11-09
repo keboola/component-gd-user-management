@@ -1,6 +1,7 @@
 **0.2.5**
 Added ability to provision the GD project from other Keboola project than the source Keboola project.
 Managed by using two additional parameters `external_project` and `#external_project_token`. Only configurable via API.
+Fixed JSON schema for hidden fields.
 
 **0.2.4**
 Fixed bug, which resulted in application fail when invitations were not created.

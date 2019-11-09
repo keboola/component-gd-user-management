@@ -34,6 +34,18 @@
 			"description": "If the GoodData project is white labeled, provide the domain. Format: \"https://subdomain.domain.com\".",
 			"default": "",
 			"propertyOrder": 600
+		},
+		"external_project": {
+			"type": "boolean",
+			"default": false,
+			"title": "Use external project",
+			"propertyOrder": 1000
+		},
+		"#external_project_token": {
+			"type": "string",
+			"format": "password",
+			"title": "Storage token for external project",
+			"propertyOrder": 2000
 		}
 	}
 }
