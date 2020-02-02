@@ -29,29 +29,14 @@ if 'KBC_LOGGER_ADDR' in os.environ and 'KBC_LOGGER_PORT' in os.environ:
     logger.removeHandler(logger.handlers[0])
 
 # Key definition
-GD_USERNAME = 'username'
-GD_PASSWORD = '#password'
-GD_PID = 'pid'
-GD_CUSTOM_DOMAIN = 'domain_custom'
-GD_URL = 'gd_url'
-KBC_URL = 'provisioning_url'
 
-APP_VERSION = '0.2.5'
-
-MANDATORY_PARS = [GD_USERNAME, GD_PASSWORD, GD_PID, GD_CUSTOM_DOMAIN]
+APP_VERSION = '0.2.6'
 
 if __name__ == '__main__':
 
     logging.info("Running app version %s..." % APP_VERSION)
 
-    mngr = Component(GD_USERNAME,
-                     GD_PASSWORD,
-                     GD_PID,
-                     GD_CUSTOM_DOMAIN,
-                     GD_URL,
-                     KBC_URL,
-                     MANDATORY_PARS)
-
+    mngr = Component()
     mngr.run()
 
     logging.info("User management finished!")

@@ -46,6 +46,12 @@
 			"format": "password",
 			"title": "Storage token for external project",
 			"propertyOrder": 2000
+		},
+		"skip_project_check": {
+			"type": "boolean",
+			"title": "Skip Project Check",
+			"description": "If set to true, a project check is skipped completely.",
+			"propertyOrder": 3000
 		}
 	}
 }

@@ -8,8 +8,17 @@ from lib.logger import Logger
 from lib.user import User
 from kbc.env_handler import KBCEnvHandler
 
+KEY_GDUSERNAME = 'username'
+KEY_GDPASSWORD = '#password'
+KEY_GDPID = 'pid'
+KEY_GDCUSTOMDOMAIN = 'domain_custom'
+KEY_GDURL = 'gd_url'
+KEY_KBCURL = 'provisioning_url'
 KEY_EXTERNAL_PROJECT = 'external_project'
 KEY_EXTERNAL_PROJECT_TOKEN = '#external_project_token'
+KEY_SKIPPROJECTCHECK = 'skip_project_check'
+
+MANDATORY_PARS = [KEY_GDUSERNAME, KEY_GDPASSWORD, KEY_GDPID]
 
 
 class Component(KBCEnvHandler):
@@ -20,8 +29,7 @@ class Component(KBCEnvHandler):
     See keboola-python-util-lib package: https://bitbucket.org/kds_consulting_team/keboola-python-util-lib/src/master/
     """
 
-    def __init__(self, username_key, password_key, pid_key,
-                 domain_key, gd_url_key, kbc_prov_key, MANDATORY_PARS):
+    def __init__(self):
         """
         Init function.
         In addition to initialization of the class, the function checks whether provided PID is in the list
@@ -50,15 +58,16 @@ class Component(KBCEnvHandler):
         KBCEnvHandler.__init__(self, MANDATORY_PARS)
 
         sapi_token = self.get_storage_token()
-        username = self.cfg_params[username_key]
-        password = self.cfg_params[password_key]
-        pid = self.cfg_params[pid_key]
-        domain = self.cfg_params[domain_key]
-        gd_url = self.image_params[gd_url_key]
-        kbc_prov_url = self.image_params[kbc_prov_key]
+        username = self.cfg_params[KEY_GDUSERNAME]
+        password = self.cfg_params[KEY_GDPASSWORD]
+        pid = self.cfg_params[KEY_GDPID]
+        domain = self.cfg_params[KEY_GDCUSTOMDOMAIN]
+        gd_url = self.image_params[KEY_GDURL]
+        kbc_prov_url = self.image_params[KEY_KBCURL]
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
+        skip_project_check = self.cfg_params.get(KEY_SKIPPROJECTCHECK, False)
 
         if external_project is True:
             sapi_token = external_project_token
@@ -68,7 +77,8 @@ class Component(KBCEnvHandler):
 
         self.input_files = self.configuration.get_input_tables()
         self.log = Logger(self.data_path)
-        self._compare_projects()
+        if skip_project_check is False:
+            self._compare_projects()
         self._get_all_attributes()
         self._get_all_users()
         self._map_roles()
