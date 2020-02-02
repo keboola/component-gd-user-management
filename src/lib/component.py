@@ -56,6 +56,7 @@ class Component(KBCEnvHandler):
         """
 
         KBCEnvHandler.__init__(self, MANDATORY_PARS)
+        self.validate_config(MANDATORY_PARS)
 
         sapi_token = self.get_storage_token()
         username = self.cfg_params[KEY_GDUSERNAME]
