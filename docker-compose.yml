@@ -9,6 +9,7 @@ services:
     environment:
       - KBC_DATADIR=./data
       - KBC_TOKEN=XXXX-XXXXXXXXXXXXXXXXXXXX
+      - KBC_RUNID=abscsfsd
   test:
     # Use to run flake8 and unittests checks
     build: .

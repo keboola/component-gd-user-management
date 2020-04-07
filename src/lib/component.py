@@ -17,6 +17,7 @@ KEY_KBCURL = 'provisioning_url'
 KEY_EXTERNAL_PROJECT = 'external_project'
 KEY_EXTERNAL_PROJECT_TOKEN = '#external_project_token'
 KEY_SKIPPROJECTCHECK = 'skip_project_check'
+KEY_RUN_ID = 'KBC_RUNID'
 
 MANDATORY_PARS = [KEY_GDUSERNAME, KEY_GDPASSWORD, KEY_GDPID]
 
@@ -65,6 +66,7 @@ class Component(KBCEnvHandler):
         domain = self.cfg_params[KEY_GDCUSTOMDOMAIN]
         gd_url = self.image_params[KEY_GDURL]
         kbc_prov_url = self.image_params[KEY_KBCURL]
+        self.run_id = os.environ.get(KEY_RUN_ID)
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
@@ -77,7 +79,7 @@ class Component(KBCEnvHandler):
                                             gd_url, kbc_prov_url, sapi_token)
 
         self.input_files = self.configuration.get_input_tables()
-        self.log = Logger(self.data_path)
+        self.log = Logger(self.data_path, run_id=self.run_id)
         if skip_project_check is False:
             self._compare_projects()
         self._get_all_attributes()

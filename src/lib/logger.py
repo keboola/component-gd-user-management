@@ -11,7 +11,7 @@ class Logger:
     A class used for logging all necessary steps in the MUF process and their status.
     """
 
-    def __init__(self, data_path):
+    def __init__(self, data_path, run_id=None):
 
         """
         An initialization function.
@@ -30,7 +30,9 @@ class Logger:
                        'timestamp',
                        'role',
                        'details',
-                       'muf']
+                       'muf',
+                       'run_id']
+        self.run_id = run_id
 
         logging.info("Status file saved to %s." % self.output_path)
 
@@ -81,7 +83,8 @@ class Logger:
                      'timestamp': _ts,
                      'role': role,
                      'details': details,
-                     'muf': muf}
+                     'muf': muf,
+                     'run_id': self.run_id}
 
         with open(self.output_path, 'a') as log_file:
 
