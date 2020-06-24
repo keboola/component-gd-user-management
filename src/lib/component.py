@@ -784,6 +784,14 @@ class Component(KBCEnvHandler):
                             "Column %s is missing from the .csv file." % e)
                         sys.exit(1)
 
+                    if _login.strip() == self.client.username.lower().strip():
+
+                        logging.error("Cannot operate on user, who is used for authentication.")
+                        self.log.make_log(user.login, 'PERMISSION_ERROR', False,
+                                          user.role, "Cannot assign filters to user used for authentication.",
+                                          user.muf)
+                        continue
+
                     logging.info("Starting process for user %s." % _login)
 
                     _av_roles = list(self._roles_map.keys())

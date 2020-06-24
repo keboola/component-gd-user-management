@@ -738,7 +738,7 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(inv_response)
 
     @staticmethod
-    def list_to_str(l):
+    def list_to_str(listToStr):
 
         """
         A function to convert list to list-like string.
@@ -753,7 +753,7 @@ class clientGoodDataKeboola:
             A string that represents inputted list..
         """
 
-        return '[' + ','.join('"{0}"'.format(x) for x in l) + ']'
+        return '[' + ','.join('"{0}"'.format(x) for x in listToStr) + ']'
 
     def _GD_create_MUF(self, expression, name):
 

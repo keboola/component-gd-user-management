@@ -30,7 +30,7 @@ if 'KBC_LOGGER_ADDR' in os.environ and 'KBC_LOGGER_PORT' in os.environ:
 
 # Key definition
 
-APP_VERSION = '0.2.7'
+APP_VERSION = '0.2.8'
 
 if __name__ == '__main__':
 
