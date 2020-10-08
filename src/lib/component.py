@@ -923,22 +923,27 @@ class Component(KBCEnvHandler):
                             continue
 
                         logging.debug("Re-enabling user...")
-                        _sc, _js = self.client._GD_add_user_to_project(
-                            user.uri, user.role_uri)
+                        _sc, _js = self.client._GD_add_user_to_project(user.uri, user.role_uri)
 
-                        _failed = _js['projectUsersUpdateResult']['failed']
+                        if _sc == 200:
 
-                        if len(_failed) == 0 and _sc == 200:
+                            _failed = _js['projectUsersUpdateResult']['failed']
 
-                            self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
-                                              user.role, '', user.muf)
+                            if len(_failed) == 0:
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True, user.role, '', user.muf)
+
+                            else:
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", False, user.role,
+                                                  _failed[0]['message'], user.muf)
+                                logging.warn("There were some errors for user %s." % _login)
 
                         else:
+                            logging.warn(f"Could not enable user {_login} in the project. Returned: {_sc} - {_js}.")
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False, user.role,
+                                              f"Could not enable user {_login} in the project. " +
+                                              f"Returned: {_sc} - {_js}.", user.muf)
 
-                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
-                                              user.role, _failed[0]['message'], user.muf)
-                            logging.warn(
-                                "There were some errors for user %s." % _login)
+                            continue
 
                     elif user._app_action in ('MUF GD_INVITE', 'TRY_KB_CREATE MUF ENABLE_OR_INVITE'):
 
