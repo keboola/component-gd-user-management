@@ -587,12 +587,15 @@ class clientGoodDataKeboola:
 
         if roles_sc != 200:
 
-            logging.error(
-                "Could not fetch project roles. Received code %s" % roles_sc)
+            logging.error("Could not fetch project roles. Received code %s" % roles_sc)
             logging.error("Response: %s" % json.dumps(roles_json))
             sys.exit(1)
 
-        _roles = roles_json['projectRoles']['roles']
+        _roles = roles_json.get('projectRoles', {}).get('roles', [])
+        if _roles == []:
+            logging.error("Could not download roles from GoodData.")
+            logging.error(f"Received: {roles_sc} - {roles_json}.")
+            sys.exit(1)
 
         _GD_roles = {}
 
