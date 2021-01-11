@@ -34,12 +34,6 @@
 			"description": "If the GoodData project is white labeled, provide the domain. Format: \"https://subdomain.domain.com\".",
 			"default": "",
 			"propertyOrder": 600
-		},
-		"skip_project_check": {
-			"type": "boolean",
-			"title": "Skip Project Check",
-			"description": "If set to true, a project check is skipped completely.",
-			"propertyOrder": 3000
 		}
 	}
 }

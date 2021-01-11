@@ -8,6 +8,10 @@ from lib.logger import Logger
 from lib.user import User
 from kbc.env_handler import KBCEnvHandler
 
+sys.tracebacklimit = 0
+
+APP_VERSION = '0.2.11'
+
 KEY_GDUSERNAME = 'username'
 KEY_GDPASSWORD = '#password'
 KEY_GDPID = 'pid'
@@ -18,6 +22,7 @@ KEY_EXTERNAL_PROJECT = 'external_project'
 KEY_EXTERNAL_PROJECT_TOKEN = '#external_project_token'
 KEY_SKIPPROJECTCHECK = 'skip_project_check'
 KEY_RUN_ID = 'KBC_RUNID'
+KEY_DEBUG = 'debug'
 
 MANDATORY_PARS = [KEY_GDUSERNAME, KEY_GDPASSWORD, KEY_GDPID]
 
@@ -57,7 +62,19 @@ class Component(KBCEnvHandler):
         """
 
         KBCEnvHandler.__init__(self, MANDATORY_PARS)
-        self.validate_config(MANDATORY_PARS)
+        logging.info("Running app version %s..." % APP_VERSION)
+
+        if self.cfg_params.get(KEY_DEBUG) is True:
+            logger = logging.getLogger()
+            logger.setLevel(level='DEBUG')
+
+            sys.tracebacklimit = 3
+
+        try:
+            self.validate_config(MANDATORY_PARS)
+        except KeyError as e:
+            logging.exception(e)
+            raise
 
         sapi_token = self.get_storage_token()
         username = self.cfg_params[KEY_GDUSERNAME]
@@ -70,7 +87,7 @@ class Component(KBCEnvHandler):
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
-        skip_project_check = self.cfg_params.get(KEY_SKIPPROJECTCHECK, False)
+        skip_project_check = True
 
         if external_project is True:
             sapi_token = external_project_token
