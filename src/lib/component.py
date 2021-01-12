@@ -10,7 +10,7 @@ from kbc.env_handler import KBCEnvHandler
 
 sys.tracebacklimit = 0
 
-APP_VERSION = '0.2.11'
+APP_VERSION = '0.2.12'
 
 KEY_GDUSERNAME = 'username'
 KEY_GDPASSWORD = '#password'
@@ -83,7 +83,7 @@ class Component(KBCEnvHandler):
         domain = self.cfg_params[KEY_GDCUSTOMDOMAIN]
         gd_url = self.image_params[KEY_GDURL]
         kbc_prov_url = self.image_params[KEY_KBCURL]
-        self.run_id = os.environ.get(KEY_RUN_ID)
+        self.run_id = os.environ.get(KEY_RUN_ID, '')
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
@@ -545,7 +545,7 @@ class Component(KBCEnvHandler):
 
         return '[' + ''.join(_list) + ']'
 
-    def create_muf(self, muf_expr):
+    def create_muf(self, muf_expr, muf_name: str = None):
         """
         Creates data permission from a list.
 
@@ -565,7 +565,7 @@ class Component(KBCEnvHandler):
 
         for mf in muf_expr:
 
-            mf_sc, mf_json = self.client._GD_create_MUF(mf, 'muf')
+            mf_sc, mf_json = self.client._GD_create_MUF(mf, muf_name if muf_name is not None else 'muf')
 
             if mf_sc == 200:
 
@@ -699,7 +699,7 @@ class Component(KBCEnvHandler):
             logging.error("Unknown error while checking for membership.")
             sys.exit(2)
 
-    def create_muf_uri(self, user):
+    def create_muf_uri(self, user, muf_name: str):
         """
         A function combining creating MUF expression function and creating MUFs.
 
@@ -738,7 +738,7 @@ class Component(KBCEnvHandler):
 
             return False, []
 
-        _status, _muf_uri = self.create_muf(_muf_expr)
+        _status, _muf_uri = self.create_muf(_muf_expr, muf_name)
 
         self.log.make_log(user.login, "CREATE_MUF", _status,
                           user.role, str(_muf_uri), user.muf)
@@ -794,6 +794,7 @@ class Component(KBCEnvHandler):
                         _ln = row['last_name']
 
                         user = User(_login, _role, _muf, _action, _fn, _ln)
+                        muf_name = f'muf_{_login}_{self.run_id}'
 
                     except KeyError as e:
 
@@ -910,7 +911,7 @@ class Component(KBCEnvHandler):
                             continue
 
                         logging.debug("Creating MUFs...")
-                        _status, _muf = self.create_muf_uri(user)
+                        _status, _muf = self.create_muf_uri(user, muf_name)
 
                         logging.debug(_muf)
 
@@ -996,7 +997,7 @@ class Component(KBCEnvHandler):
                                     "User %s already exists in a different organization." % user.login)
 
                         logging.debug("Creating MUFs...")
-                        _status, _muf = self.create_muf_uri(user)
+                        _status, _muf = self.create_muf_uri(user, muf_name)
 
                         if _status is False:
 
@@ -1088,7 +1089,7 @@ class Component(KBCEnvHandler):
                             "User will be assigned MUFs and enabled.")
                         logging.debug("Creating MUFs...")
 
-                        _status, _muf = self.create_muf_uri(user)
+                        _status, _muf = self.create_muf_uri(user, muf_name)
 
                         if _status is False:
 
