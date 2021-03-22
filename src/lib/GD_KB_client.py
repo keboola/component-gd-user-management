@@ -17,7 +17,6 @@ class clientGoodDataKeboola:
     """
 
     def __init__(self, username, password, pid, domain, gd_url, kbc_url, sapi_token):
-
         """
         Client class initialization.
 
@@ -57,7 +56,6 @@ class clientGoodDataKeboola:
         self._GD_get_SST_token()
 
     def _GD_get_SST_token(self):
-
         """
         A function for obtaining super token to GD API.
 
@@ -118,7 +116,6 @@ class clientGoodDataKeboola:
             sys.exit(1)
 
     def _GD_get_TT_token(self):
-
         """
         Function for obtaining TT token.
 
@@ -167,7 +164,6 @@ class clientGoodDataKeboola:
             sys.exit(1)
 
     def _GD_build_header(self):
-
         """
         Function for building header for GD request. TT token needs to be refreshed after almost every request.
 
@@ -191,7 +187,6 @@ class clientGoodDataKeboola:
         logging.debug("Request header: %s" % _header)
 
     def _GD_get_users(self):
-
         """
         Function for getting all users (active and disabled), currently in the project.
 
@@ -222,7 +217,6 @@ class clientGoodDataKeboola:
             sys.exit(1)
 
     def _GD_get_attributes(self):
-
         """
         Function for getting all attributes in the project.
 
@@ -263,7 +257,6 @@ class clientGoodDataKeboola:
             sys.exit(1)
 
     def rsp_splitter(self, rsp):
-
         """
         A function for splitting requests.response class.
 
@@ -289,7 +282,6 @@ class clientGoodDataKeboola:
         return rsp.status_code, _rtrn_json
 
     def _GD_get_attribute_values(self, attribute_uri):
-
         """
         A function for obtaining attribute values for given attribute.
 
@@ -348,7 +340,6 @@ class clientGoodDataKeboola:
         return True, _out_elements
 
     def _KBC_get_projects(self):
-
         """
         A function to obtain all projects within a KBC project.
 
@@ -386,7 +377,6 @@ class clientGoodDataKeboola:
             sys.exit(1)
 
     def _KBC_get_users(self):
-
         """
         A function for obtaining all users provisioned within the project.
 
@@ -444,8 +434,7 @@ class clientGoodDataKeboola:
 
         return allUsers
 
-    def _KBC_create_user(self, login, first_name, last_name):
-
+    def _KBC_create_user(self, login, first_name, last_name, sso_provider=None):
         """
         A function for creating user within Keboola domain.
 
@@ -468,22 +457,23 @@ class clientGoodDataKeboola:
         url = self.kbc_url + '/users'
         _pswd = secrets.token_hex(16)
 
-        _data = f'''{{
-            "login": "{login}",
-            "password": "{_pswd}",
-            "firstName": "{first_name}",
-            "lastName": "{last_name}"
-        }}
-        '''
+        _data = {
+            "login": login,
+            "password": _pswd,
+            "firstName": first_name,
+            "lastName": last_name
+        }
+
+        if sso_provider is not None:
+            _data['ssoProvider'] = sso_provider
 
         logging.debug(_data)
 
-        cu_response = requests.post(url, headers=self._KBC_header, data=_data.encode('utf-8'))
+        cu_response = requests.post(url, headers=self._KBC_header, json=_data)
 
         return self.rsp_splitter(cu_response)
 
     def _KBC_remove_user_from_project(self, login):
-
         """
         A function for removing user from the project using Keboola API.
 
@@ -506,7 +496,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(du_response)
 
     def _KBC_add_user_to_project(self, login, role):
-
         """
         A function for adding users to a project using Keboola API.
 
@@ -536,7 +525,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(au_response)
 
     def _GD_get_role_details(self, role_uri):
-
         """
         A function for getting details about roles in GoodData.
 
@@ -559,7 +547,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(role_detail_request)
 
     def _GD_get_roles(self):
-
         """
         A function for getting all roles and their details.
 
@@ -611,7 +598,6 @@ class clientGoodDataKeboola:
         return _GD_roles
 
     def _GD_add_user_to_project(self, user_uri, role_uri):
-
         """
         A function for adding user to a project using GD API.
 
@@ -653,7 +639,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(au_response)
 
     def _GD_disable_user_in_project(self, user_uri):
-
         """
         A function to disable users in a project using GD API.
 
@@ -690,7 +675,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(ru_response)
 
     def _GD_invite_users_to_project(self, invitation_dict):
-
         """
         A function to create invitations to the GD project.
 
@@ -735,14 +719,12 @@ class clientGoodDataKeboola:
 
         logging.debug(_data)
 
-        inv_response = requests.post(
-            url, headers=self._GD_header, data=_data)
+        inv_response = requests.post(url, headers=self._GD_header, data=_data)
 
         return self.rsp_splitter(inv_response)
 
-    @staticmethod
+    @ staticmethod
     def list_to_str(listToStr):
-
         """
         A function to convert list to list-like string.
 
@@ -759,7 +741,6 @@ class clientGoodDataKeboola:
         return '[' + ','.join('"{0}"'.format(x) for x in listToStr) + ']'
 
     def _GD_create_MUF(self, expression, name):
-
         """
         A function to create MUF expressions in the project.
 
@@ -801,7 +782,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(dp_rsp)
 
     def _GD_assign_MUF(self, user, userFilters):
-
         """
         A function to assign MUFs to a user.
 
@@ -844,7 +824,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(af_rsp)
 
     def _GD_get_data_permissions_for_user(self, user_uri):
-
         """
         A function for getting data permissions for a user.
 
@@ -873,7 +852,6 @@ class clientGoodDataKeboola:
         return self.rsp_splitter(uf_rsp)
 
     def _GD_remove_user_from_project(self, user_uri):
-
         """
         A function removes a user completely from the project. The user has to
         be invited back to the project, in order to regain access.

@@ -2,7 +2,7 @@ class User:
     """
     A class representing user in the whole MUF process.
     """
-    def __init__(self, login, role, muf, action, first_name, last_name):
+    def __init__(self, login, role, muf, action, first_name, last_name, sso_provider=None):
 
         """
         Init function.
@@ -29,3 +29,4 @@ class User:
         self.action = action
         self.first_name = first_name
         self.last_name = last_name
+        self.sso_provider = sso_provider

@@ -10,7 +10,7 @@ from kbc.env_handler import KBCEnvHandler
 
 sys.tracebacklimit = 0
 
-APP_VERSION = '0.2.12'
+APP_VERSION = '0.2.13'
 
 KEY_GDUSERNAME = 'username'
 KEY_GDPASSWORD = '#password'
@@ -23,6 +23,11 @@ KEY_EXTERNAL_PROJECT_TOKEN = '#external_project_token'
 KEY_SKIPPROJECTCHECK = 'skip_project_check'
 KEY_RUN_ID = 'KBC_RUNID'
 KEY_DEBUG = 'debug'
+
+KEY_PBP = 'pbp'
+KEY_CUSTOM_PID = '#pid'
+KEY_CUSTOM_GDAPI_TOKEN = '#sapi_token'
+KEY_CUSTOM_GDAPI_URL = 'api_url'
 
 MANDATORY_PARS = [KEY_GDUSERNAME, KEY_GDPASSWORD, KEY_GDPID]
 
@@ -87,18 +92,24 @@ class Component(KBCEnvHandler):
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
-        skip_project_check = True
 
         if external_project is True:
             sapi_token = external_project_token
+
+        pbp = self.image_params.get(KEY_PBP, {})
+        pbp_gd_pid = pbp.get(KEY_CUSTOM_PID, None)
+        pbp_gd_api_token = pbp.get(KEY_CUSTOM_GDAPI_TOKEN)
+        pbp_gd_api_url = pbp.get(KEY_CUSTOM_GDAPI_URL, '')
+
+        if pbp_gd_pid == pid:
+            kbc_prov_url = pbp_gd_api_url
+            sapi_token = pbp_gd_api_token
 
         self.client = clientGoodDataKeboola(username, password, pid, domain,
                                             gd_url, kbc_prov_url, sapi_token)
 
         self.input_files = self.configuration.get_input_tables()
         self.log = Logger(self.data_path, run_id=self.run_id)
-        if skip_project_check is False:
-            self._compare_projects()
         self._get_all_attributes()
         self._get_all_users()
         self._map_roles()
@@ -792,8 +803,12 @@ class Component(KBCEnvHandler):
                         _muf = row['muf']
                         _fn = row['first_name']
                         _ln = row['last_name']
+                        _sso = row.get('sso_provider', '')
 
-                        user = User(_login, _role, _muf, _action, _fn, _ln)
+                        if _sso.strip() == '':
+                            _sso = None
+
+                        user = User(_login, _role, _muf, _action, _fn, _ln, _sso)
                         muf_name = f'muf_{_login}_{self.run_id}'
 
                     except KeyError as e:
@@ -971,7 +986,7 @@ class Component(KBCEnvHandler):
                                 "Attempting to create user %s in organization." % user.login)
 
                             _sc, _js = self.client._KBC_create_user(
-                                user.login, user.first_name, user.last_name)
+                                user.login, user.first_name, user.last_name, user.sso_provider)
 
                             if _sc == 201:
 
