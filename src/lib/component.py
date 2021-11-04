@@ -10,7 +10,7 @@ from kbc.env_handler import KBCEnvHandler
 
 sys.tracebacklimit = 0
 
-APP_VERSION = '0.2.13'
+APP_VERSION = '0.3.0'
 
 KEY_GDUSERNAME = 'username'
 KEY_GDPASSWORD = '#password'
@@ -66,7 +66,7 @@ class Component(KBCEnvHandler):
             A list of mandatory parameters.
         """
 
-        KBCEnvHandler.__init__(self, MANDATORY_PARS)
+        KBCEnvHandler.__init__(self, MANDATORY_PARS, data_path='./data')
         logging.info("Running app version %s..." % APP_VERSION)
 
         if self.cfg_params.get(KEY_DEBUG) is True:
@@ -212,23 +212,23 @@ class Component(KBCEnvHandler):
 
         #    json.dump(self.users_GD, file)
 
-        _KB_users = self.client._KBC_get_users()
+        # _KB_users = self.client._KBC_get_users()
 
-        logging.debug("Keboola users:")
-        logging.debug(_KB_users)
+        # logging.debug("Keboola users:")
+        # logging.debug(_KB_users)
 
         _KB_users_out = {}
 
-        for u in _KB_users:
+        # for u in _KB_users:
 
-            _email = u['login']
-            _email_identifier = _email.lower()
-            _user_uri = '/gdc/account/profile/' + u['uid']
+        #     _email = u['login']
+        #     _email_identifier = _email.lower()
+        #     _user_uri = '/gdc/account/profile/' + u['uid']
 
-            _KB_users_out[_email_identifier] = {'email': _email,
-                                                'uri': _user_uri}
+        #     _KB_users_out[_email_identifier] = {'email': _email,
+        #                                         'uri': _user_uri}
 
-        self.log.make_log('admin', 'GET_KBC_USERS', True, '', '', '')
+        # self.log.make_log('admin', 'GET_KBC_USERS', True, '', '', '')
         self.users_KB = _KB_users_out
 
     def _map_roles(self):
