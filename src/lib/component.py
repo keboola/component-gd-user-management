@@ -10,7 +10,7 @@ from kbc.env_handler import KBCEnvHandler
 
 sys.tracebacklimit = 0
 
-APP_VERSION = '0.3.0'
+APP_VERSION = '0.3.1'
 
 KEY_GDUSERNAME = 'username'
 KEY_GDPASSWORD = '#password'
@@ -66,7 +66,7 @@ class Component(KBCEnvHandler):
             A list of mandatory parameters.
         """
 
-        KBCEnvHandler.__init__(self, MANDATORY_PARS, data_path='./data')
+        KBCEnvHandler.__init__(self, MANDATORY_PARS)
         logging.info("Running app version %s..." % APP_VERSION)
 
         if self.cfg_params.get(KEY_DEBUG) is True:
