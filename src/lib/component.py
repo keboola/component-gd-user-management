@@ -10,7 +10,7 @@ from kbc.env_handler import KBCEnvHandler
 
 sys.tracebacklimit = 0
 
-APP_VERSION = '0.3.1'
+APP_VERSION = '0.3.2'
 
 KEY_GDUSERNAME = 'username'
 KEY_GDPASSWORD = '#password'
@@ -104,6 +104,7 @@ class Component(KBCEnvHandler):
         if pbp_gd_pid == pid:
             kbc_prov_url = pbp_gd_api_url
             sapi_token = pbp_gd_api_token
+            self.is_pbp_project = True
 
         self.client = clientGoodDataKeboola(username, password, pid, domain,
                                             gd_url, kbc_prov_url, sapi_token)
@@ -212,23 +213,29 @@ class Component(KBCEnvHandler):
 
         #    json.dump(self.users_GD, file)
 
-        # _KB_users = self.client._KBC_get_users()
+        if self.is_pbp_project is True:
 
-        # logging.debug("Keboola users:")
-        # logging.debug(_KB_users)
+            _KB_users = self.client._KBC_get_users()
+
+            logging.debug("Keboola users:")
+            logging.debug(_KB_users)
+
+        else:
+
+            _KB_users = []
 
         _KB_users_out = {}
 
-        # for u in _KB_users:
+        for u in _KB_users:
 
-        #     _email = u['login']
-        #     _email_identifier = _email.lower()
-        #     _user_uri = '/gdc/account/profile/' + u['uid']
+            _email = u['login']
+            _email_identifier = _email.lower()
+            _user_uri = '/gdc/account/profile/' + u['uid']
 
-        #     _KB_users_out[_email_identifier] = {'email': _email,
-        #                                         'uri': _user_uri}
+            _KB_users_out[_email_identifier] = {'email': _email,
+                                                'uri': _user_uri}
 
-        # self.log.make_log('admin', 'GET_KBC_USERS', True, '', '', '')
+        self.log.make_log('admin', 'GET_KBC_USERS', True, '', '', '')
         self.users_KB = _KB_users_out
 
     def _map_roles(self):
@@ -703,7 +710,11 @@ class Component(KBCEnvHandler):
 
             else:
 
-                user._app_action = 'TRY_KB_CREATE MUF ENABLE_OR_INVITE'
+                if self.is_pbp_project:
+                    user._app_action = 'TRY_KB_CREATE MUF ENABLE_OR_INVITE'
+
+                else:
+                    user._app_action = 'MUF GD_INVITE'
 
         else:
 
