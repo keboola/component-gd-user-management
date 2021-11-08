@@ -10,7 +10,7 @@ from kbc.env_handler import KBCEnvHandler
 
 sys.tracebacklimit = 0
 
-APP_VERSION = '0.3.2'
+APP_VERSION = '0.3.3'
 
 KEY_GDUSERNAME = 'username'
 KEY_GDPASSWORD = '#password'
@@ -100,6 +100,8 @@ class Component(KBCEnvHandler):
         pbp_gd_pid = pbp.get(KEY_CUSTOM_PID, None)
         pbp_gd_api_token = pbp.get(KEY_CUSTOM_GDAPI_TOKEN)
         pbp_gd_api_url = pbp.get(KEY_CUSTOM_GDAPI_URL, '')
+
+        self.is_pbp_project = False
 
         if pbp_gd_pid == pid:
             kbc_prov_url = pbp_gd_api_url
