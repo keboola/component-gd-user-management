@@ -1,39 +1,47 @@
 {
-	"title": "Parameters",
-	"type": "object",
-	"required": [
-		"username",
-		"#password",
-		"pid",
-		"domain_custom"
-	],
-	"properties": {
-		"username": {
-			"type": "string",
-			"title": "GD Login",
-			"default": "",
-			"description": "Admin login to GoodData portal.",
-			"propertyOrder": 100
-		},
-		"#password": {
-			"type": "string",
-			"format": "password",
-			"title": "GD Password",
-			"description": "Password to admin login to GoodData portal.",
-			"propertyOrder": 200
-		},
-		"pid": {
-			"type": "string",
-			"title": "GD Project ID",
-			"description": "GoodData project ID. See description for more info.",
-			"propertyOrder": 300
-		},
-		"domain_custom": {
-			"type": "string",
-			"title": "GD Custom Domain",
-			"description": "If the GoodData project is white labeled, provide the domain. Format: \"https://subdomain.domain.com\".",
-			"default": "",
-			"propertyOrder": 600
-		}
-	}
+  "title": "Parameters",
+  "type": "object",
+  "required": [
+    "username",
+    "#password",
+    "pid",
+    "domain_custom"
+  ],
+  "properties": {
+    "username": {
+      "type": "string",
+      "title": "GD Login",
+      "default": "",
+      "description": "Admin login to GoodData portal.",
+      "propertyOrder": 100
+    },
+    "#password": {
+      "type": "string",
+      "format": "password",
+      "title": "GD Password",
+      "description": "Password to admin login to GoodData portal.",
+      "propertyOrder": 200
+    },
+    "pid": {
+      "type": "string",
+      "title": "GD Project ID",
+      "description": "GoodData project ID. See description for more info.",
+      "propertyOrder": 300
+    },
+    "domain_custom": {
+      "type": "string",
+      "title": "GD Custom Domain",
+      "description": "If the GoodData project is white labeled, provide the domain. Format: \"https://subdomain.domain.com\".",
+      "default": "",
+      "propertyOrder": 600
+    },
+    "re_invite_users": {
+      "type": "boolean",
+      "title": "Re-invite users",
+      "format": "checkbox",
+      "description": "Send invites to users that have already been invited",
+      "default": true,
+      "propertyOrder": 700
+    }
+  }
 }

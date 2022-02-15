@@ -23,6 +23,7 @@ KEY_EXTERNAL_PROJECT_TOKEN = '#external_project_token'
 KEY_SKIPPROJECTCHECK = 'skip_project_check'
 KEY_RUN_ID = 'KBC_RUNID'
 KEY_DEBUG = 'debug'
+KEY_RE_INVITE_USERS = "re_invite_users"
 
 KEY_PBP = 'pbp'
 KEY_CUSTOM_PID = '#pid'
@@ -33,7 +34,6 @@ MANDATORY_PARS = [KEY_GDUSERNAME, KEY_GDPASSWORD, KEY_GDPID]
 
 
 class Component(KBCEnvHandler):
-
     """
     The main component class, a children class of KBCEnvHandler.
 
@@ -89,6 +89,7 @@ class Component(KBCEnvHandler):
         gd_url = self.image_params[KEY_GDURL]
         kbc_prov_url = self.image_params[KEY_KBCURL]
         self.run_id = os.environ.get(KEY_RUN_ID, '')
+        self.re_invite_users = self.cfg_params.get(KEY_RE_INVITE_USERS, True)
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
@@ -118,6 +119,10 @@ class Component(KBCEnvHandler):
         self._map_roles()
         self._GD_check_user_admin()
         self._GD_check_admin_permissions()
+        if not self.re_invite_users:
+            self._get_all_invitations()
+        else:
+            self.invitations = []
 
     def _compare_projects(self):
         """
@@ -137,7 +142,6 @@ class Component(KBCEnvHandler):
         _projects_ids = [p['pid'] for p in _projects]
 
         if self.client.pid not in _projects_ids:
-
             logging.error(
                 "GoodData Project ID %s is not located in this project." % self.client.pid)
             logging.error(
@@ -159,7 +163,6 @@ class Component(KBCEnvHandler):
         _attributes = self.client._GD_get_attributes()['query']['entries']
 
         for a in _attributes:
-
             _identifier = a['identifier']
             _link = a['link']
 
@@ -229,7 +232,6 @@ class Component(KBCEnvHandler):
         _KB_users_out = {}
 
         for u in _KB_users:
-
             _email = u['login']
             _email_identifier = _email.lower()
             _user_uri = '/gdc/account/profile/' + u['uid']
@@ -239,6 +241,17 @@ class Component(KBCEnvHandler):
 
         self.log.make_log('admin', 'GET_KBC_USERS', True, '', '', '')
         self.users_KB = _KB_users_out
+
+    def _get_all_invitations(self):
+        logging.info("Fetching invited users")
+        invitations = self.client._GD_get_project_invitations().get("invitations")
+        self.invitations = []
+        for invitation in invitations:
+            try:
+                invite_email = invitation.get("invitation").get("content").get("email")
+                self.invitations.append(invite_email)
+            except AttributeError:
+                logging.info(f"Error processing invite info: {invitation} ")
 
     def _map_roles(self):
         """
@@ -283,7 +296,6 @@ class Component(KBCEnvHandler):
         _role_matrix = {}
 
         for r in _KB_roles:
-
             _gd_map = _role_map.get(r)
             _gd_uri = _GD_roles.get(_gd_map)
 
@@ -317,7 +329,6 @@ class Component(KBCEnvHandler):
         _usr_filters = _js["userFilters"]["items"]
 
         if len(_usr_filters) != 0:
-
             logging.error("Admin account cannot have any data permissions assigned to them. Please, use" +
                           " a different user or remove data permissions.")
 
@@ -352,7 +363,6 @@ class Component(KBCEnvHandler):
                 _role_dict = self._roles_map[r]
 
                 if _role_dict['GD_URI'] == _usr_role_uri:
-
                     _usr_role_name = r
                     break
 
@@ -436,13 +446,11 @@ class Component(KBCEnvHandler):
                     _attr_uri = _attr_GD.get('uri')
 
                 if not _attr_uri:
-
                     return False, "Attribute %s has no URI." % _attr
 
                 _attr_vals = self.get_attribute_values(_attr_uri)
 
                 if _attr_vals is False:
-
                     return False, "Could not obtain values for attribute %s" % _attr_uri
 
                 _attr_vals_uri = []
@@ -497,13 +505,11 @@ class Component(KBCEnvHandler):
         _sc, _values = self.client._GD_get_attribute_values(attribute_uri)
 
         if _sc is False:
-
             return False
 
         _val_out = {}
 
         for v in _values:
-
             _title = v['title']
             _uri = v['uri']
 
@@ -625,7 +631,6 @@ class Component(KBCEnvHandler):
         _user_action = user.action
 
         if _user_action not in ("ENABLE", "DISABLE", "INVITE", "REMOVE"):
-
             self.log.make_log(_login, _user_action, False,
                               user.role, "User action must be one of ENABLE, DISABLE, INVITE or REMOVE.", '')
             user._app_action = 'SKIP'
@@ -635,7 +640,11 @@ class Component(KBCEnvHandler):
         _in_org = _login in self.users_KB
         _in_prj = _login in self.users_GD
 
-        if _in_prj is True:
+        if user.login in self.invitations and user.action == "INVITE" and not self.re_invite_users:
+            logging.info(f"User {user.login} will not be invited as they have already received an invite.")
+            user._app_action = 'SKIP'
+
+        elif _in_prj is True:
 
             _status = self.users_GD[_login]['status']
             user.uri = self.users_GD[_login]['uri']
@@ -747,7 +756,6 @@ class Component(KBCEnvHandler):
         logging.debug(_muf_str)
 
         if _muf_str == '[]':
-
             return True, []
 
         _status, _muf_expr = self.create_muf_expression(_muf_str)
@@ -759,7 +767,6 @@ class Component(KBCEnvHandler):
         logging.debug("MUF EXPR: %s" % _muf_expr)
 
         if _status is False:
-
             return False, []
 
         _status, _muf_uri = self.create_muf(_muf_expr, muf_name)
@@ -831,7 +838,6 @@ class Component(KBCEnvHandler):
                         sys.exit(1)
 
                     if _login.strip() == self.client.username.lower().strip():
-
                         logging.error("Cannot operate on user, who is used for authentication.")
                         self.log.make_log(user.login, 'PERMISSION_ERROR', False,
                                           user.role, "Cannot assign filters to user used for authentication.",
@@ -843,7 +849,6 @@ class Component(KBCEnvHandler):
                     _av_roles = list(self._roles_map.keys())
 
                     if _role not in _av_roles:
-
                         self.log.make_log(user.login, "ROLE_ERROR", False,
                                           user.role, "Role must be one of %s" % str(_av_roles), user.muf)
 
@@ -944,7 +949,6 @@ class Component(KBCEnvHandler):
                         logging.debug(_muf)
 
                         if _status is False:
-
                             logging.warn(
                                 "There were some errors for user %s when creating URIs for MUFs." % _login)
                             continue
@@ -1028,7 +1032,6 @@ class Component(KBCEnvHandler):
                         _status, _muf = self.create_muf_uri(user, muf_name)
 
                         if _status is False:
-
                             logging.warn(
                                 "Could not create MUF for user %s." % _login)
                             continue
@@ -1120,7 +1123,6 @@ class Component(KBCEnvHandler):
                         _status, _muf = self.create_muf_uri(user, muf_name)
 
                         if _status is False:
-
                             logging.warn(
                                 "Could not create MUF for user %s." % user.login)
                             continue

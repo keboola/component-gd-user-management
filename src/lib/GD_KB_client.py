@@ -7,7 +7,6 @@ import secrets
 
 
 class clientGoodDataKeboola:
-
     """
     Main class for REST requests to GD API.
 
@@ -216,6 +215,35 @@ class clientGoodDataKeboola:
             logging.error("Response: %s" % json.dumps(ur_json))
             sys.exit(1)
 
+    def _GD_get_project_invitations(self):
+        """
+        Function for getting project details
+
+        Parameters
+        ----------
+        self : class
+
+        Returns
+        -------
+
+        """
+
+        self._GD_build_header()
+
+        url = self.gd_url + f'/gdc/projects/{self.pid}/invitations'
+
+        project_request = requests.get(url, headers=self._GD_header)
+        ur_sc = project_request.status_code
+        ur_json = project_request.json()
+
+        if ur_sc in (200, 201, 202):
+            return ur_json
+        else:
+            logging.error("There was an issue extracting invitation data from GD. " +
+                          "Code received is %s." % str(ur_sc))
+            logging.error("Response: %s" % json.dumps(ur_json))
+            sys.exit(1)
+
     def _GD_get_attributes(self):
         """
         Function for getting all attributes in the project.
@@ -307,7 +335,6 @@ class clientGoodDataKeboola:
         att_sc = attr_response.status_code
 
         if att_sc != 200:
-
             logging.error(
                 "Could not obtain attribute values for attribute %s." % attribute_uri)
 
@@ -404,7 +431,6 @@ class clientGoodDataKeboola:
         while complete is not True:
 
             if paginationToken is not None:
-
                 params['nextPageToken'] = paginationToken
 
             usr_response = requests.get(url, headers=self._KBC_header, params=params)
@@ -573,7 +599,6 @@ class clientGoodDataKeboola:
         roles_sc, roles_json = self.rsp_splitter(roles_response)
 
         if roles_sc != 200:
-
             logging.error("Could not fetch project roles. Received code %s" % roles_sc)
             logging.error("Response: %s" % json.dumps(roles_json))
             sys.exit(1)
@@ -587,7 +612,6 @@ class clientGoodDataKeboola:
         _GD_roles = {}
 
         for r in _roles:
-
             _, _details = self._GD_get_role_details(r)
 
             # logging.debug(_details)
@@ -723,7 +747,7 @@ class clientGoodDataKeboola:
 
         return self.rsp_splitter(inv_response)
 
-    @ staticmethod
+    @staticmethod
     def list_to_str(listToStr):
         """
         A function to convert list to list-like string.
