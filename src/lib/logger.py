@@ -116,8 +116,10 @@ class Logger:
 
         _man = {"destination": "out.c-GDUserManagement.status",
                 "incremental": True,
-                "delimiter": ",",
-                "write_always": self.write_always}
+                "delimiter": ","}
+
+        if self.write_always:
+            _man["write_always"] = True
 
         with open(_manifest_path, 'w') as f:
 
