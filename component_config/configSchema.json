@@ -42,6 +42,14 @@
       "description": "Send invites to users that have already been invited",
       "default": true,
       "propertyOrder": 700
+    },
+    "fail_on_error": {
+      "type": "boolean",
+      "title": "Fail on Error",
+      "format": "checkbox",
+      "description": "If set to true, the component will end with error after processing all requests and saving output.",
+      "default": true,
+      "propertyOrder": 800
     }
   }
 }

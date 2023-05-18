@@ -24,6 +24,7 @@ KEY_SKIPPROJECTCHECK = 'skip_project_check'
 KEY_RUN_ID = 'KBC_RUNID'
 KEY_DEBUG = 'debug'
 KEY_RE_INVITE_USERS = "re_invite_users"
+KEY_FAIL_ON_ERROR = "fail_on_error"
 
 KEY_PBP = 'pbp'
 KEY_CUSTOM_PID = '#pid'
@@ -86,6 +87,7 @@ class Component(KBCEnvHandler):
         password = self.cfg_params[KEY_GDPASSWORD]
         pid = self.cfg_params[KEY_GDPID]
         domain = self.cfg_params[KEY_GDCUSTOMDOMAIN]
+        fail_on_error = self.cfg_params[KEY_FAIL_ON_ERROR]
         gd_url = self.image_params[KEY_GDURL]
         kbc_prov_url = self.image_params[KEY_KBCURL]
         self.run_id = os.environ.get(KEY_RUN_ID, '')
@@ -113,7 +115,7 @@ class Component(KBCEnvHandler):
                                             gd_url, kbc_prov_url, sapi_token)
 
         self.input_files = self.configuration.get_input_tables()
-        self.log = Logger(self.data_path, run_id=self.run_id)
+        self.log = Logger(self.data_path, run_id=self.run_id, write_always=fail_on_error)
         self._get_all_attributes()
         self._get_all_users()
         self._map_roles()
@@ -123,6 +125,8 @@ class Component(KBCEnvHandler):
             self._get_all_invitations()
         else:
             self.invitations = []
+
+        self.encountered_errors = False
 
     def _compare_projects(self):
         """
@@ -854,6 +858,7 @@ class Component(KBCEnvHandler):
 
                         logging.warn(
                             "There were some errors for user %s." % _login)
+                        self.encountered_errors = True
                         continue
 
                     self.check_membership(user)
@@ -941,6 +946,7 @@ class Component(KBCEnvHandler):
 
                             logging.warn(
                                 "There were some errors for user %s." % _login)
+                            self.encountered_errors = True
                             continue
 
                         logging.debug("Creating MUFs...")
@@ -951,6 +957,7 @@ class Component(KBCEnvHandler):
                         if _status is False:
                             logging.warn(
                                 "There were some errors for user %s when creating URIs for MUFs." % _login)
+                            self.encountered_errors = True
                             continue
 
                         logging.debug("Assigning MUFs...")
@@ -970,6 +977,7 @@ class Component(KBCEnvHandler):
 
                             logging.warn(
                                 "There were some errors for user %s when assigning MUFs." % _login)
+                            self.encountered_errors = True
                             continue
 
                         logging.debug("Re-enabling user...")
@@ -986,6 +994,7 @@ class Component(KBCEnvHandler):
                                 self.log.make_log(user.login, "ENABLE_IN_PRJ", False, user.role,
                                                   _failed[0]['message'], user.muf)
                                 logging.warn("There were some errors for user %s." % _login)
+                                self.encountered_errors = True
 
                         else:
                             logging.warn(f"Could not enable user {_login} in the project. Returned: {_sc} - {_js}.")
@@ -1021,6 +1030,7 @@ class Component(KBCEnvHandler):
 
                                 logging.warn(
                                     "There were some errors for user %s." % _login)
+                                self.encountered_errors = True
                                 continue
 
                             else:
@@ -1061,6 +1071,7 @@ class Component(KBCEnvHandler):
 
                                     logging.warn(
                                         "There were some errors when inviting user %s." % _login)
+                                    self.encountered_errors = True
                                     self.log.make_log(user.login, "INVITE_TO_PRJ", False,
                                                       user.role, _js, user.muf)
 
@@ -1068,6 +1079,7 @@ class Component(KBCEnvHandler):
 
                                 logging.warning(
                                     "There were some errors when inviting user %s." % _login)
+                                self.encountered_errors = True
                                 self.log.make_log(
                                     user.login, "INVITE_TO_PRJ", False, user.role,
                                     "Error when creating invitations, please check the email address. Response: " +
@@ -1095,6 +1107,7 @@ class Component(KBCEnvHandler):
 
                                 logging.warn(
                                     "There were some errors for user %s when assigning MUFs." % _login)
+                                self.encountered_errors = True
                                 continue
 
                             logging.debug("Enabling user in the project...")
@@ -1113,6 +1126,7 @@ class Component(KBCEnvHandler):
 
                                 logging.warn(
                                     "There were some errors for user %s." % _login)
+                                self.encountered_errors = True
 
                     elif user._app_action == 'MUF KB_ENABLE':
 
@@ -1145,6 +1159,7 @@ class Component(KBCEnvHandler):
 
                             logging.warn(
                                 "There were some errors for user %s when assigning MUFs." % _login)
+                            self.encountered_errors = True
                             continue
 
                         logging.debug("Enabling user in the project...")
