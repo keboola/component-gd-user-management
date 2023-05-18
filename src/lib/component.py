@@ -87,11 +87,15 @@ class Component(KBCEnvHandler):
         password = self.cfg_params[KEY_GDPASSWORD]
         pid = self.cfg_params[KEY_GDPID]
         domain = self.cfg_params[KEY_GDCUSTOMDOMAIN]
-        fail_on_error = self.cfg_params.get(KEY_FAIL_ON_ERROR, False)
         gd_url = self.image_params[KEY_GDURL]
         kbc_prov_url = self.image_params[KEY_KBCURL]
         self.run_id = os.environ.get(KEY_RUN_ID, '')
         self.re_invite_users = self.cfg_params.get(KEY_RE_INVITE_USERS, True)
+
+        fail_on_error = self.cfg_params.get(KEY_FAIL_ON_ERROR, False)
+        if fail_on_error and 'queuev2' not in os.environ.get('KBC_PROJECT_FEATURE_GATES', ''):
+            logging.error("Fail on error option is not available on Queue V2.")
+            sys.exit(1)
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
