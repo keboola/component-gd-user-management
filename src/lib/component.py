@@ -94,7 +94,7 @@ class Component(KBCEnvHandler):
 
         fail_on_error = self.cfg_params.get(KEY_FAIL_ON_ERROR, False)
         if fail_on_error and 'queuev2' not in os.environ.get('KBC_PROJECT_FEATURE_GATES', ''):
-            logging.error("Fail on error option is not available on Queue V2.")
+            logging.error("Fail on error option is only available on Queue V2.")
             sys.exit(1)
 
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
