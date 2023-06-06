@@ -3,7 +3,9 @@
     "username": "admin_user@domain.com",
     "#password": "notPSWD1234",
     "pid": "gdprojectid12345678",
-    "domain_custom": ""
+    "domain_custom": "",
+    "re_invite_users": false,
+    "fail_on_error": true
   },
   "image_parameters": {
     "provisioning_url": "https://gooddata-provisioning.keboola.com",

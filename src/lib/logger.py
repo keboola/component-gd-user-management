@@ -11,7 +11,7 @@ class Logger:
     A class used for logging all necessary steps in the MUF process and their status.
     """
 
-    def __init__(self, data_path, run_id=None):
+    def __init__(self, data_path, run_id=None, write_always: bool = False):
 
         """
         An initialization function.
@@ -33,6 +33,10 @@ class Logger:
                        'muf',
                        'run_id']
         self.run_id = run_id
+        self.write_always = write_always
+        if self.write_always:
+            logging.info("Parameter fail_on_error is set to true, the component will end with error if it encounters "
+                         "any problems during run.")
 
         logging.info("Status file saved to %s." % self.output_path)
 
@@ -113,6 +117,9 @@ class Logger:
         _man = {"destination": "out.c-GDUserManagement.status",
                 "incremental": True,
                 "delimiter": ","}
+
+        if self.write_always:
+            _man["write_always"] = True
 
         with open(_manifest_path, 'w') as f:
 

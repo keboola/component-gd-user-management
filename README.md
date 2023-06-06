@@ -47,6 +47,8 @@ The application accepts 4 parameters and a table of users. In addition to the 4 
 ### 2.1 Parameters
 
 Following 4 parameters are accepted: `GD Login`, `GD Password`, `GD Project ID` and `GD Custom Domain`. More detailed description of all parameters is provided in the upcoming subsections.
+Recently, there were two additional parameters added: `Re-invite users` and `Fail on Error`. The Re-invite users options enables sending invite emails to already invited users and fail on error makes the component end with error AFTER processing all objects if it encounters any errors during the run.
+The `Fail on Error` feature only works on queue v2.
 
 A sample of the configuration file can be [found here](https://bitbucket.org/kds_consulting_team/kds-team.app-gd-user-management/src/master/component_config/sample-config/config.json).
 

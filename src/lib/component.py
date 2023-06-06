@@ -24,6 +24,7 @@ KEY_SKIPPROJECTCHECK = 'skip_project_check'
 KEY_RUN_ID = 'KBC_RUNID'
 KEY_DEBUG = 'debug'
 KEY_RE_INVITE_USERS = "re_invite_users"
+KEY_FAIL_ON_ERROR = "fail_on_error"
 
 KEY_PBP = 'pbp'
 KEY_CUSTOM_PID = '#pid'
@@ -91,6 +92,11 @@ class Component(KBCEnvHandler):
         self.run_id = os.environ.get(KEY_RUN_ID, '')
         self.re_invite_users = self.cfg_params.get(KEY_RE_INVITE_USERS, True)
 
+        fail_on_error = self.cfg_params.get(KEY_FAIL_ON_ERROR, False)
+        if fail_on_error and 'queuev2' not in os.environ.get('KBC_PROJECT_FEATURE_GATES', ''):
+            logging.error("Fail on error option is only available on Queue V2.")
+            sys.exit(1)
+
         external_project = self.cfg_params.get(KEY_EXTERNAL_PROJECT, False)
         external_project_token = self.cfg_params.get(KEY_EXTERNAL_PROJECT_TOKEN)
 
@@ -113,7 +119,7 @@ class Component(KBCEnvHandler):
                                             gd_url, kbc_prov_url, sapi_token)
 
         self.input_files = self.configuration.get_input_tables()
-        self.log = Logger(self.data_path, run_id=self.run_id)
+        self.log = Logger(self.data_path, run_id=self.run_id, write_always=fail_on_error)
         self._get_all_attributes()
         self._get_all_users()
         self._map_roles()
@@ -123,6 +129,392 @@ class Component(KBCEnvHandler):
             self._get_all_invitations()
         else:
             self.invitations = []
+
+        self.encountered_errors = False
+
+    def run(self):
+        """
+        The main run function
+
+        Parameters
+        ----------
+        self : class
+        """
+
+        for f in self.input_files:
+
+            _path = os.path.join(self.data_path, 'in',
+                                 'tables', f['destination'])
+
+            with open(_path) as file:
+
+                _rdr = csv.DictReader(file)
+
+                for row in _rdr:
+
+                    try:
+
+                        _login = row['login'].lower()
+                        _action = row['action']
+                        _role = row['role']
+                        _muf = row['muf']
+                        _fn = row['first_name']
+                        _ln = row['last_name']
+                        _sso = row.get('sso_provider', '')
+
+                        if _sso.strip() == '':
+                            _sso = None
+
+                        user = User(_login, _role, _muf, _action, _fn, _ln, _sso)
+                        muf_name = f'muf_{_login}_{self.run_id}'
+
+                    except KeyError as e:
+
+                        logging.error(
+                            "Column %s is missing from the .csv file." % e)
+                        sys.exit(1)
+
+                    if _login.strip() == self.client.username.lower().strip():
+                        logging.error("Cannot operate on user, who is used for authentication.")
+                        self.log.make_log(user.login, 'PERMISSION_ERROR', False,
+                                          user.role, "Cannot assign filters to user used for authentication.",
+                                          user.muf)
+                        continue
+
+                    logging.info("Starting process for user %s." % _login)
+
+                    _av_roles = list(self._roles_map.keys())
+
+                    if _role not in _av_roles:
+                        self.log.make_log(user.login, "ROLE_ERROR", False,
+                                          user.role, "Role must be one of %s" % str(_av_roles), user.muf)
+
+                        logging.warn(
+                            "There were some errors for user %s." % _login)
+                        self.encountered_errors = True
+                        continue
+
+                    self.check_membership(user)
+
+                    logging.info("User %s was assigned the following action: %s" % (
+                        user.login, user._app_action))
+
+                    self.log.make_log(user.login, "ASSIGN_ACTION", True,
+                                      user.role, user._app_action, user.muf)
+
+                    self.map_role_to_uri(user)
+
+                    if user._app_action == 'SKIP':
+
+                        self.log.make_log(user.login, "NO_ACTION", True,
+                                          user.role, "No action needed.", user.muf)
+
+                        logging.debug("Skipping user %s" % user.login)
+
+                        continue
+
+                    elif user._app_action == 'SKIP_NO_REMOVE':
+
+                        logging.warn(
+                            "Can't remove the user specified in the login section. The user %s will be skipped!"
+                            % _login)
+                        self.log.make_log(user.login, "REMOVE_FROM_PRJ", False,
+                                          user.role, "Cannot remove the user used to login. Please, "
+                                          + "change the username in parameters.", '')
+
+                    elif user._app_action == 'GD_REMOVE':
+
+                        logging.debug(
+                            "Attempting to remove user %s." % user.login)
+
+                        _sc, _js = self.client._GD_remove_user_from_project(
+                            user.uri)
+
+                        if _sc == 200:
+
+                            self.log.make_log(user.login, "REMOVE_FROM_PRJ", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "REMOVE_FROM_PRJ", False,
+                                              user.role, '', user.muf)
+
+                    elif user._app_action == 'GD_DISABLE':
+
+                        logging.debug(
+                            "Attemmpting to disable user %s" % user.login)
+
+                        _sc, _js = self.client._GD_disable_user_in_project(
+                            user.uri)
+
+                        if _sc == 200:
+
+                            self.log.make_log(user.login, "DISABLE_IN_PRJ", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "DISABLE_IN_PRJ", False,
+                                              user.role, _js, user.muf)
+
+                    elif user._app_action == 'GD_DISABLE MUF GD_ENABLE':
+
+                        logging.debug(
+                            "User %s will be disabled, assigned MUFs and re-enabled." % user.login)
+                        logging.debug("Disabling...")
+
+                        _sc, _js = self.client._GD_disable_user_in_project(
+                            user.uri)
+
+                        if _sc == 200:
+
+                            self.log.make_log(user.login, "DISABLE_IN_PRJ", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "DISABLE_IN_PRJ", False,
+                                              user.role, _js, user.muf)
+
+                            logging.warn(
+                                "There were some errors for user %s." % _login)
+                            self.encountered_errors = True
+                            continue
+
+                        logging.debug("Creating MUFs...")
+                        _status, _muf = self.create_muf_uri(user, muf_name)
+
+                        logging.debug(_muf)
+
+                        if _status is False:
+                            logging.warn(
+                                "There were some errors for user %s when creating URIs for MUFs." % _login)
+                            self.encountered_errors = True
+                            continue
+
+                        logging.debug("Assigning MUFs...")
+                        _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
+
+                        if _sc == 200:
+
+                            self.log.make_log(user.login, "ASSIGN_MUF", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "ASSIGN_MUF", False,
+                                              user.role, _js, user.muf)
+
+                            logging.debug(_js)
+
+                            logging.warn(
+                                "There were some errors for user %s when assigning MUFs." % _login)
+                            self.encountered_errors = True
+                            continue
+
+                        logging.debug("Re-enabling user...")
+                        _sc, _js = self.client._GD_add_user_to_project(user.uri, user.role_uri)
+
+                        if _sc == 200:
+
+                            _failed = _js['projectUsersUpdateResult']['failed']
+
+                            if len(_failed) == 0:
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True, user.role, '', user.muf)
+
+                            else:
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", False, user.role,
+                                                  _failed[0]['message'], user.muf)
+                                logging.warn("There were some errors for user %s." % _login)
+                                self.encountered_errors = True
+
+                        else:
+                            logging.warn(f"Could not enable user {_login} in the project. Returned: {_sc} - {_js}.")
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False, user.role,
+                                              f"Could not enable user {_login} in the project. " +
+                                              f"Returned: {_sc} - {_js}.", user.muf)
+
+                            continue
+
+                    elif user._app_action in ('MUF GD_INVITE', 'TRY_KB_CREATE MUF ENABLE_OR_INVITE'):
+
+                        if user._app_action == 'TRY_KB_CREATE MUF ENABLE_OR_INVITE':
+
+                            logging.info(
+                                "Attempting to create user %s in organization." % user.login)
+
+                            _sc, _js = self.client._KBC_create_user(
+                                user.login, user.first_name, user.last_name, user.sso_provider)
+
+                            if _sc == 201:
+
+                                user.uri = '/gdc/account/profile/' + _js['uid']
+                                self.log.make_log(
+                                    user.login, "USER_CREATE", True, user.role, user.uri, user.muf)
+
+                                logging.debug(
+                                    "User created successfully. URI: %s" % user.uri)
+
+                            elif _sc == 422:
+
+                                self.log.make_log(
+                                    user.login, "USER_CREATE", False, user.role, _js['errorMessage'], user.muf)
+
+                                logging.warn(
+                                    "There were some errors for user %s." % _login)
+                                self.encountered_errors = True
+                                continue
+
+                            else:
+
+                                logging.warn(
+                                    "User %s already exists in a different organization." % user.login)
+
+                        logging.debug("Creating MUFs...")
+                        _status, _muf = self.create_muf_uri(user, muf_name)
+
+                        if _status is False:
+                            logging.warn(
+                                "Could not create MUF for user %s." % _login)
+                            continue
+
+                        if user.uri is None or (user.uri is not None and user.action == 'INVITE'):
+
+                            logging.debug("Inviting user...")
+
+                            _dict = {'_email': user.login,
+                                     '_role': user.role_uri,
+                                     '_usrFilter': _muf}
+
+                            _sc, _js = self.client._GD_invite_users_to_project(
+                                _dict)
+
+                            if _sc == 200:
+
+                                _d_mismatch = _js['createdInvitations']['loginsDomainMismatch']
+                                _d_inproject = _js['createdInvitations']['loginsAlreadyInProject']
+
+                                if len(_d_mismatch) == 0 and len(_d_inproject) == 0:
+
+                                    self.log.make_log(user.login, "INVITE_TO_PRJ", True,
+                                                      user.role, '', user.muf)
+
+                                else:
+
+                                    logging.warn(
+                                        "There were some errors when inviting user %s." % _login)
+                                    self.encountered_errors = True
+                                    self.log.make_log(user.login, "INVITE_TO_PRJ", False,
+                                                      user.role, _js, user.muf)
+
+                            else:
+
+                                logging.warning(
+                                    "There were some errors when inviting user %s." % _login)
+                                self.encountered_errors = True
+                                self.log.make_log(
+                                    user.login, "INVITE_TO_PRJ", False, user.role,
+                                    "Error when creating invitations, please check the email address. Response: " +
+                                    str(_js),
+                                    user.muf)
+
+                        else:
+
+                            logging.debug("Assigning MUFs...")
+
+                            _sc, _js = self.client._GD_assign_MUF(
+                                user.uri, _muf)
+
+                            if _sc == 200:
+
+                                self.log.make_log(user.login, "ASSIGN_MUF", True,
+                                                  user.role, '', user.muf)
+
+                            else:
+
+                                self.log.make_log(user.login, "ASSIGN_MUF", False,
+                                                  user.role, _js, user.muf)
+
+                                logging.debug(_js)
+
+                                logging.warn(
+                                    "There were some errors for user %s when assigning MUFs." % _login)
+                                self.encountered_errors = True
+                                continue
+
+                            logging.debug("Enabling user in the project...")
+                            _sc, _js = self.client._KBC_add_user_to_project(
+                                user.login, user.role)
+
+                            if _sc == 204:
+
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                                                  user.role, '', user.muf)
+
+                            else:
+
+                                self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
+                                                  user.role, _js, user.muf)
+
+                                logging.warn(
+                                    "There were some errors for user %s." % _login)
+                                self.encountered_errors = True
+
+                    elif user._app_action == 'MUF KB_ENABLE':
+
+                        logging.debug(
+                            "User will be assigned MUFs and enabled.")
+                        logging.debug("Creating MUFs...")
+
+                        _status, _muf = self.create_muf_uri(user, muf_name)
+
+                        if _status is False:
+                            logging.warn(
+                                "Could not create MUF for user %s." % user.login)
+                            continue
+
+                        logging.debug("Assigning MUFs...")
+
+                        _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
+
+                        if _sc == 200:
+
+                            self.log.make_log(user.login, "ASSIGN_MUF", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "ASSIGN_MUF", False,
+                                              user.role, _js, user.muf)
+
+                            logging.debug(_js)
+
+                            logging.warn(
+                                "There were some errors for user %s when assigning MUFs." % _login)
+                            self.encountered_errors = True
+                            continue
+
+                        logging.debug("Enabling user in the project...")
+                        _sc, _js = self.client._KBC_add_user_to_project(
+                            user.login, user.role)
+
+                        if _sc == 204:
+
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
+                                              user.role, '', user.muf)
+
+                        else:
+
+                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
+                                              user.role, _js, user.muf)
+
+                    logging.info("Process for user %s has ended." % user.login)
+
+        if self.encountered_errors:
+            logging.error("The component has encountered errors during the component run. "
+                          "Please check the status table for more info.")
+            sys.exit(1)
 
     def _compare_projects(self):
         """
@@ -794,371 +1186,3 @@ class Component(KBCEnvHandler):
 
         _role = user.role
         user.role_uri = self._roles_map[_role]['GD_URI']
-
-    def run(self):
-        """
-        The main run function
-
-        Parameters
-        ----------
-        self : class
-        """
-
-        for f in self.input_files:
-
-            _path = os.path.join(self.data_path, 'in',
-                                 'tables', f['destination'])
-
-            with open(_path) as file:
-
-                _rdr = csv.DictReader(file)
-
-                for row in _rdr:
-
-                    try:
-
-                        _login = row['login'].lower()
-                        _action = row['action']
-                        _role = row['role']
-                        _muf = row['muf']
-                        _fn = row['first_name']
-                        _ln = row['last_name']
-                        _sso = row.get('sso_provider', '')
-
-                        if _sso.strip() == '':
-                            _sso = None
-
-                        user = User(_login, _role, _muf, _action, _fn, _ln, _sso)
-                        muf_name = f'muf_{_login}_{self.run_id}'
-
-                    except KeyError as e:
-
-                        logging.error(
-                            "Column %s is missing from the .csv file." % e)
-                        sys.exit(1)
-
-                    if _login.strip() == self.client.username.lower().strip():
-                        logging.error("Cannot operate on user, who is used for authentication.")
-                        self.log.make_log(user.login, 'PERMISSION_ERROR', False,
-                                          user.role, "Cannot assign filters to user used for authentication.",
-                                          user.muf)
-                        continue
-
-                    logging.info("Starting process for user %s." % _login)
-
-                    _av_roles = list(self._roles_map.keys())
-
-                    if _role not in _av_roles:
-                        self.log.make_log(user.login, "ROLE_ERROR", False,
-                                          user.role, "Role must be one of %s" % str(_av_roles), user.muf)
-
-                        logging.warn(
-                            "There were some errors for user %s." % _login)
-                        continue
-
-                    self.check_membership(user)
-
-                    logging.info("User %s was assigned the following action: %s" % (
-                        user.login, user._app_action))
-
-                    self.log.make_log(user.login, "ASSIGN_ACTION", True,
-                                      user.role, user._app_action, user.muf)
-
-                    self.map_role_to_uri(user)
-
-                    if user._app_action == 'SKIP':
-
-                        self.log.make_log(user.login, "NO_ACTION", True,
-                                          user.role, "No action needed.", user.muf)
-
-                        logging.debug("Skipping user %s" % user.login)
-
-                        continue
-
-                    elif user._app_action == 'SKIP_NO_REMOVE':
-
-                        logging.warn(
-                            "Can't remove the user specified in the login section. The user %s will be skipped!"
-                            % _login)
-                        self.log.make_log(user.login, "REMOVE_FROM_PRJ", False,
-                                          user.role, "Cannot remove the user used to login. Please, "
-                                          + "change the username in parameters.", '')
-
-                    elif user._app_action == 'GD_REMOVE':
-
-                        logging.debug(
-                            "Attempting to remove user %s." % user.login)
-
-                        _sc, _js = self.client._GD_remove_user_from_project(
-                            user.uri)
-
-                        if _sc == 200:
-
-                            self.log.make_log(user.login, "REMOVE_FROM_PRJ", True,
-                                              user.role, '', user.muf)
-
-                        else:
-
-                            self.log.make_log(user.login, "REMOVE_FROM_PRJ", False,
-                                              user.role, '', user.muf)
-
-                    elif user._app_action == 'GD_DISABLE':
-
-                        logging.debug(
-                            "Attemmpting to disable user %s" % user.login)
-
-                        _sc, _js = self.client._GD_disable_user_in_project(
-                            user.uri)
-
-                        if _sc == 200:
-
-                            self.log.make_log(user.login, "DISABLE_IN_PRJ", True,
-                                              user.role, '', user.muf)
-
-                        else:
-
-                            self.log.make_log(user.login, "DISABLE_IN_PRJ", False,
-                                              user.role, _js, user.muf)
-
-                    elif user._app_action == 'GD_DISABLE MUF GD_ENABLE':
-
-                        logging.debug(
-                            "User %s will be disabled, assigned MUFs and re-enabled." % user.login)
-                        logging.debug("Disabling...")
-
-                        _sc, _js = self.client._GD_disable_user_in_project(
-                            user.uri)
-
-                        if _sc == 200:
-
-                            self.log.make_log(user.login, "DISABLE_IN_PRJ", True,
-                                              user.role, '', user.muf)
-
-                        else:
-
-                            self.log.make_log(user.login, "DISABLE_IN_PRJ", False,
-                                              user.role, _js, user.muf)
-
-                            logging.warn(
-                                "There were some errors for user %s." % _login)
-                            continue
-
-                        logging.debug("Creating MUFs...")
-                        _status, _muf = self.create_muf_uri(user, muf_name)
-
-                        logging.debug(_muf)
-
-                        if _status is False:
-                            logging.warn(
-                                "There were some errors for user %s when creating URIs for MUFs." % _login)
-                            continue
-
-                        logging.debug("Assigning MUFs...")
-                        _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
-
-                        if _sc == 200:
-
-                            self.log.make_log(user.login, "ASSIGN_MUF", True,
-                                              user.role, '', user.muf)
-
-                        else:
-
-                            self.log.make_log(user.login, "ASSIGN_MUF", False,
-                                              user.role, _js, user.muf)
-
-                            logging.debug(_js)
-
-                            logging.warn(
-                                "There were some errors for user %s when assigning MUFs." % _login)
-                            continue
-
-                        logging.debug("Re-enabling user...")
-                        _sc, _js = self.client._GD_add_user_to_project(user.uri, user.role_uri)
-
-                        if _sc == 200:
-
-                            _failed = _js['projectUsersUpdateResult']['failed']
-
-                            if len(_failed) == 0:
-                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True, user.role, '', user.muf)
-
-                            else:
-                                self.log.make_log(user.login, "ENABLE_IN_PRJ", False, user.role,
-                                                  _failed[0]['message'], user.muf)
-                                logging.warn("There were some errors for user %s." % _login)
-
-                        else:
-                            logging.warn(f"Could not enable user {_login} in the project. Returned: {_sc} - {_js}.")
-                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False, user.role,
-                                              f"Could not enable user {_login} in the project. " +
-                                              f"Returned: {_sc} - {_js}.", user.muf)
-
-                            continue
-
-                    elif user._app_action in ('MUF GD_INVITE', 'TRY_KB_CREATE MUF ENABLE_OR_INVITE'):
-
-                        if user._app_action == 'TRY_KB_CREATE MUF ENABLE_OR_INVITE':
-
-                            logging.info(
-                                "Attempting to create user %s in organization." % user.login)
-
-                            _sc, _js = self.client._KBC_create_user(
-                                user.login, user.first_name, user.last_name, user.sso_provider)
-
-                            if _sc == 201:
-
-                                user.uri = '/gdc/account/profile/' + _js['uid']
-                                self.log.make_log(
-                                    user.login, "USER_CREATE", True, user.role, user.uri, user.muf)
-
-                                logging.debug(
-                                    "User created successfully. URI: %s" % user.uri)
-
-                            elif _sc == 422:
-
-                                self.log.make_log(
-                                    user.login, "USER_CREATE", False, user.role, _js['errorMessage'], user.muf)
-
-                                logging.warn(
-                                    "There were some errors for user %s." % _login)
-                                continue
-
-                            else:
-
-                                logging.warn(
-                                    "User %s already exists in a different organization." % user.login)
-
-                        logging.debug("Creating MUFs...")
-                        _status, _muf = self.create_muf_uri(user, muf_name)
-
-                        if _status is False:
-                            logging.warn(
-                                "Could not create MUF for user %s." % _login)
-                            continue
-
-                        if user.uri is None or (user.uri is not None and user.action == 'INVITE'):
-
-                            logging.debug("Inviting user...")
-
-                            _dict = {'_email': user.login,
-                                     '_role': user.role_uri,
-                                     '_usrFilter': _muf}
-
-                            _sc, _js = self.client._GD_invite_users_to_project(
-                                _dict)
-
-                            if _sc == 200:
-
-                                _d_mismatch = _js['createdInvitations']['loginsDomainMismatch']
-                                _d_inproject = _js['createdInvitations']['loginsAlreadyInProject']
-
-                                if len(_d_mismatch) == 0 and len(_d_inproject) == 0:
-
-                                    self.log.make_log(user.login, "INVITE_TO_PRJ", True,
-                                                      user.role, '', user.muf)
-
-                                else:
-
-                                    logging.warn(
-                                        "There were some errors when inviting user %s." % _login)
-                                    self.log.make_log(user.login, "INVITE_TO_PRJ", False,
-                                                      user.role, _js, user.muf)
-
-                            else:
-
-                                logging.warning(
-                                    "There were some errors when inviting user %s." % _login)
-                                self.log.make_log(
-                                    user.login, "INVITE_TO_PRJ", False, user.role,
-                                    "Error when creating invitations, please check the email address. Response: " +
-                                    str(_js),
-                                    user.muf)
-
-                        else:
-
-                            logging.debug("Assigning MUFs...")
-
-                            _sc, _js = self.client._GD_assign_MUF(
-                                user.uri, _muf)
-
-                            if _sc == 200:
-
-                                self.log.make_log(user.login, "ASSIGN_MUF", True,
-                                                  user.role, '', user.muf)
-
-                            else:
-
-                                self.log.make_log(user.login, "ASSIGN_MUF", False,
-                                                  user.role, _js, user.muf)
-
-                                logging.debug(_js)
-
-                                logging.warn(
-                                    "There were some errors for user %s when assigning MUFs." % _login)
-                                continue
-
-                            logging.debug("Enabling user in the project...")
-                            _sc, _js = self.client._KBC_add_user_to_project(
-                                user.login, user.role)
-
-                            if _sc == 204:
-
-                                self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
-                                                  user.role, '', user.muf)
-
-                            else:
-
-                                self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
-                                                  user.role, _js, user.muf)
-
-                                logging.warn(
-                                    "There were some errors for user %s." % _login)
-
-                    elif user._app_action == 'MUF KB_ENABLE':
-
-                        logging.debug(
-                            "User will be assigned MUFs and enabled.")
-                        logging.debug("Creating MUFs...")
-
-                        _status, _muf = self.create_muf_uri(user, muf_name)
-
-                        if _status is False:
-                            logging.warn(
-                                "Could not create MUF for user %s." % user.login)
-                            continue
-
-                        logging.debug("Assigning MUFs...")
-
-                        _sc, _js = self.client._GD_assign_MUF(user.uri, _muf)
-
-                        if _sc == 200:
-
-                            self.log.make_log(user.login, "ASSIGN_MUF", True,
-                                              user.role, '', user.muf)
-
-                        else:
-
-                            self.log.make_log(user.login, "ASSIGN_MUF", False,
-                                              user.role, _js, user.muf)
-
-                            logging.debug(_js)
-
-                            logging.warn(
-                                "There were some errors for user %s when assigning MUFs." % _login)
-                            continue
-
-                        logging.debug("Enabling user in the project...")
-                        _sc, _js = self.client._KBC_add_user_to_project(
-                            user.login, user.role)
-
-                        if _sc == 204:
-
-                            self.log.make_log(user.login, "ENABLE_IN_PRJ", True,
-                                              user.role, '', user.muf)
-
-                        else:
-
-                            self.log.make_log(user.login, "ENABLE_IN_PRJ", False,
-                                              user.role, _js, user.muf)
-
-                    logging.info("Process for user %s has ended." % user.login)
